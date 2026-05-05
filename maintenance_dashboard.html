@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GC-FIMS | Maintenance Operations</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="assets/favicon-32x32.png">
+    
     <link rel="stylesheet" href="css/dashboard_style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
@@ -13,7 +16,7 @@
         .reporter-badge { background: #f1f5f9; color: #475569; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; margin-top: 5px;}
         .faculty-priority { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
 
-        .status-dropdown { padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: bold; cursor: pointer; outline: none; }
+        .status-dropdown { padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: bold; cursor: pointer; outline: none; transition: 0.3s; }
         .status-dropdown.pending { background: #fef08a; color: #854d0e; }
         .status-dropdown.progress { background: #dbeafe; color: #1e40af; }
         .status-dropdown.resolved { background: #d1fae5; color: #065f46; }
@@ -64,7 +67,7 @@
             </div>
             <div class="user-welcome">
                 <span id="user-display-name" style="font-weight: 800; color: var(--gc-green); display: block; font-size: 18px;">Welcome, Maintenance!</span>
-                <small id="user-display-role" style="color: #64748b; font-weight: 600;">Maintenance Staff</small>
+                <small id="user-display-role" style="color: #64748b; font-weight: 600;">Maintenance Operations</small>
             </div>
         </header>
 
@@ -82,14 +85,16 @@
                         <option value="In Progress">In Progress Only</option>
                     </select>
                 </div>
+                <!-- Dito papasok ang lahat ng Active Reports -->
                 <div id="tracker-list" style="margin-top: 20px;"></div>
             </div>
         </section>
 
         <section id="view-history" class="dashboard-view">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h3><i class="fas fa-check-square"></i> Resolved & Completed Tasks</h3>
+                <h3><i class="fas fa-check-square"></i> Resolved & Completed Tasks Archive</h3>
             </div>
+            <!-- Dito papasok ang mga Resolved Reports -->
             <div id="history-list"></div>
         </section>
     </main>
@@ -101,7 +106,7 @@
     </div>
 
     <script>
-        // Data base ng lahat ng Users para mahanap ang Pangalan at Role base sa authorId
+        // Fake User Database para ma-map ang authorId pabalik sa Pangalan at Role nila
         const usersDB = [
             { account_id: "TECH001", role: "Teacher", name: "PROFESSOR X" }, 
             { email: "202512905@gordoncollege.edu.ph", role: "Student", name: "AQUINO, RAFAEL" },
@@ -159,19 +164,24 @@
             loadReports();
         };
 
-        // --- STATUS UPDATE FUNCTION ---
-        // Maintenance lang ang may dropdown para palitan ang status direkta
+        // --- STATUS UPDATE FUNCTION (Interactive Dropdown) ---
         window.updateReportStatus = function(reportId, newStatus) {
             let reports = JSON.parse(localStorage.getItem('reports')) || [];
             const index = reports.findIndex(r => r.id === reportId);
             if (index !== -1) {
                 reports[index].status = newStatus;
                 localStorage.setItem('reports', JSON.stringify(reports));
+                
+                // Kapag minarkang Resolved, magbibigay ng maliit na notification
+                if(newStatus === 'Resolved') {
+                    alert('Task marked as Resolved. It has been moved to the Resolved Tasks Archive.');
+                }
+                
                 loadReports(); // I-refresh ang view
             }
         };
 
-        // IMAGE VIEWER LOGIC
+        // --- IMAGE VIEWER LOGIC (Lightbox) ---
         window.openImageViewer = function(imageSrc) {
             const modal = document.getElementById('imageViewerModal');
             const img = document.getElementById('fullSizeImage');
@@ -183,6 +193,7 @@
         window.closeImageViewer = function() { document.getElementById('imageViewerModal').style.display = "none"; };
         window.toggleZoom = function(event) { event.stopPropagation(); document.getElementById('fullSizeImage').classList.toggle('zoomed'); };
 
+        // --- LOAD & SORT REPORTS ---
         window.loadReports = function() {
             try {
                 const rawReports = JSON.parse(localStorage.getItem('reports')) || [];
@@ -192,14 +203,13 @@
                 if (!container || !history) return;
 
                 if (rawReports.length === 0) {
-                    container.innerHTML = `<p style="text-align:center; color:#94a3b8;">No reports in the system.</p>`;
+                    container.innerHTML = `<p style="text-align:center; color:#94a3b8;">No campus reports in the system.</p>`;
                     history.innerHTML = `<p style="text-align:center; color:#94a3b8; margin-top:20px;">No resolved records yet.</p>`;
                     return;
                 }
 
-                // 1. I-map ang User Info sa mga Reports
+                // 1. I-map ang User Info (Campus-Wide View)
                 const enrichedReports = rawReports.map(r => {
-                    // Hanapin ang user sa DB base sa authorId (email or account_id)
                     const reporter = usersDB.find(u => u.email === r.authorId || u.account_id === r.authorId);
                     return {
                         ...r,
@@ -208,19 +218,25 @@
                     };
                 });
 
-                // 2. SORTING LOGIC: Priority sa Teacher, tapos by Date
+                // 2. PRIORITY SORTING LOGIC: High/Emergency muna -> Teachers -> tapos Date
                 enrichedReports.sort((a, b) => {
-                    // Rule 1: Kung Teacher si A at hindi Teacher si B, unahin si A
+                    // Priority 1: High/Emergency Urgency
+                    const aUrgent = a.urgency && a.urgency.includes('High');
+                    const bUrgent = b.urgency && b.urgency.includes('High');
+                    if (aUrgent && !bUrgent) return -1;
+                    if (!aUrgent && bUrgent) return 1;
+
+                    // Priority 2: Teacher/Faculty Role
                     if (a.reporterRole === 'Teacher' && b.reporterRole !== 'Teacher') return -1;
                     if (a.reporterRole !== 'Teacher' && b.reporterRole === 'Teacher') return 1;
                     
-                    // Rule 2: Kung parehong Teacher o parehong Student, i-sort kung sino ang pinakabago
+                    // Priority 3: Pinakabago (Newest first)
                     return new Date(b.date || 0) - new Date(a.date || 0);
                 });
 
                 // --- DASHBOARD (Active Tasks Only) ---
                 const dashFilter = document.getElementById('dashboardStatusFilter').value;
-                let activeReports = enrichedReports.filter(r => r.status !== 'Resolved'); // Tanggalin ang resolved sa action hub
+                let activeReports = enrichedReports.filter(r => r.status !== 'Resolved'); 
                 
                 if (dashFilter !== 'all') {
                     activeReports = activeReports.filter(r => r.status === dashFilter);
@@ -238,17 +254,22 @@
                         const status = r.status || "Pending";
                         let selectClass = status === 'Pending' ? 'pending' : 'progress';
                         
-                        // Badge para malaman kung Teacher o Student
+                        // Badges
                         const roleBadgeClass = r.reporterRole === 'Teacher' ? 'reporter-badge faculty-priority' : 'reporter-badge';
                         const roleIcon = r.reporterRole === 'Teacher' ? '<i class="fas fa-star"></i>' : '<i class="fas fa-user"></i>';
+                        
+                        // Image Handling (Kung may image or optional placeholder)
+                        let imageHTML = r.img 
+                            ? `<img src="${r.img}" onclick="openImageViewer('${r.img}')" style="width:100px; height:100px; border-radius:8px; object-fit:cover; cursor:zoom-in; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" title="Click to view full image">`
+                            : `<div style="width:100px; height:100px; border-radius:8px; background:#f1f5f9; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#94a3b8; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);"><i class="fas fa-camera-slash" style="font-size:24px; margin-bottom:5px;"></i><small style="font-size: 10px;">No Photo</small></div>`;
 
                         return `
                         <div style="margin-bottom: 12px; padding: 15px; background-color: #ffffff; border: 1px solid #e2e8f0; border-left: 6px solid ${borderColor}; border-radius: 8px; display:flex; gap:15px; align-items: flex-start; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                            ${r.img ? `<img src="${r.img}" onclick="openImageViewer('${r.img}')" style="width:100px; height:100px; border-radius:8px; object-fit:cover; cursor:zoom-in; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" title="Click to view full image">` : ''}
+                            ${imageHTML}
                             <div style="flex:1;">
                                 <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
                                     <strong style="color: #1e293b; font-size: 16px;">${r.title || 'Untitled'}</strong>
-                                    <span class="badge badge-${urgency.toLowerCase().split('/')[0]}">${urgency}</span>
+                                    <span class="badge" style="background: ${borderColor}; color: white;">${urgency}</span>
                                 </div>
                                 <p style="font-size:13px; color:#475569; margin-bottom: 8px; line-height: 1.4;">${r.desc}</p>
                                 <small style="color:#94a3b8; display: block;">📍 ${r.loc || 'Unknown'} &nbsp;|&nbsp; 📋 ${r.cat || 'General'}</small>
@@ -258,7 +279,7 @@
                             </div>
                             <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end; min-width: 140px;">
                                 <small style="color:#94a3b8; font-weight:bold;">${r.displayDate}</small>
-                                <!-- Interactive Status Dropdown for Maintenance -->
+                                <!-- Interactive Status Dropdown -->
                                 <select class="status-dropdown ${selectClass}" onchange="updateReportStatus(${r.id}, this.value)">
                                     <option value="Pending" ${status === 'Pending' ? 'selected' : ''}>Pending</option>
                                     <option value="In Progress" ${status === 'In Progress' ? 'selected' : ''}>In Progress</option>
@@ -270,7 +291,7 @@
                     }).join('');
                 }
 
-                // --- HISTORY VIEW (Resolved Only) ---
+                // --- HISTORY VIEW (Resolved Tasks Archive) ---
                 const resolvedReports = enrichedReports.filter(r => r.status === 'Resolved');
 
                 if (resolvedReports.length === 0) {
@@ -278,17 +299,22 @@
                 } else {
                     history.innerHTML = resolvedReports.map(r => {
                         const urgency = r.urgency || "Low";
-                        const urgencyClass = urgency.toLowerCase().split('/')[0];
-                        
-                        const roleBadgeClass = r.reporterRole === 'Teacher' ? 'reporter-badge faculty-priority' : 'reporter-badge';
+                        let borderColor = "#10b981"; 
+                        if (urgency === "Medium") borderColor = "#f59e0b"; 
+                        if (urgency.includes("High")) borderColor = "#ef4444"; 
+
+                        let imageHTML = r.img 
+                            ? `<img src="${r.img}" onclick="openImageViewer('${r.img}')" style="width:100px; height:80px; border-radius:12px; object-fit:cover; cursor:zoom-in;">`
+                            : `<div style="width:100px; height:80px; border-radius:12px; background:#f1f5f9; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#94a3b8;"><i class="fas fa-camera-slash" style="font-size:20px; margin-bottom:5px;"></i><small style="font-size: 10px;">No Photo</small></div>`;
 
                         return `
-                        <div class="card" style="margin-bottom:15px; display:flex; gap:20px; align-items:center; opacity: 0.8;">
-                            ${r.img ? `<img src="${r.img}" onclick="openImageViewer('${r.img}')" style="width:100px; height:80px; border-radius:12px; object-fit:cover; cursor:zoom-in;">` : ''}
+                        <div class="card" style="margin-bottom:15px; display:flex; gap:20px; align-items:center; opacity: 0.85;">
+                            ${imageHTML}
                             <div style="flex:1;">
                                 <div style="display:flex; gap:10px; align-items:center; margin-bottom:5px;">
                                     <span style="font-size:11px; font-weight:bold; color:var(--gc-green);">${r.displayDate || ''}</span>
-                                    <span class="badge badge-${urgencyClass}">${urgency}</span>
+                                    <span class="badge" style="background: ${borderColor}; color: white;">${urgency}</span>
+                                    ${r.reporterRole === 'Teacher' ? '<span style="background: #fee2e2; color: #991b1b; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; border: 1px solid #fca5a5;">Faculty Priority</span>' : ''}
                                 </div>
                                 <h4 style="margin:0 0 5px 0; text-decoration: line-through; color: #64748b;">${r.title || 'Untitled'}</h4>
                                 <p style="font-size:13px; color:#94a3b8;">Location: ${r.loc || ''} | Reported by: ${r.reporterName}</p>

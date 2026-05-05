@@ -6,8 +6,8 @@ const users = [
     // Staff and Admin Accounts
     { account_id: "ADMIN001", password: "123", role: "Admin", name: "ADMINISTRATOR" }, 
     { account_id: "TECH001", password: "123", role: "Teacher", name: "PROFESSOR X" }, 
-    { account_id: "MAIN001", password: "123", role: "Maintenance Staff", name: "MAINTENANCE STAFF" }, 
-    { account_id: "MAIN002", password: "123", role: "Maintenance Supervisor", name: "MAINTENANCE SUPERVISOR" },
+    { account_id: "Repairman", password: "123", role: "Maintenance Staff", name: "MAINTENANCE STAFF" }, 
+    { account_id: "Supervisor", password: "123", role: "Maintenance Supervisor", name: "MAINTENANCE SUPERVISOR" },
 
     // Student Accounts 
     { email: "202512905@gordoncollege.edu.ph", password: "123", role: "Student", name: "AQUINO, RAFAEL" },
