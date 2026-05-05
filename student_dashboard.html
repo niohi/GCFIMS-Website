@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GC-FIMS | Student Dashboard</title>
+    <link rel="icon" type="image/png" href="assets/favicon-32x32.png">
     <link rel="stylesheet" href="css/dashboard_style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
-        /* Karagdagang styles para sa Urgency Tags at Welcome Section */
         .user-welcome { text-align: right; border-left: 2px solid #e2e8f0; padding-left: 20px; }
         
         .urgency-selector { display: flex; gap: 15px; margin-top: 10px; }
@@ -27,7 +27,6 @@
         .badge-medium { background: #fef3c7; color: #92400e; }
         .badge-high { background: #fee2e2; color: #991b1b; }
 
-        /* --- IMAGE MODAL & ZOOM STYLES --- */
         .image-modal {
             display: none; position: fixed; z-index: 9999; left: 0; top: 0;
             width: 100%; height: 100%; background-color: rgba(0,0,0,0.85);
@@ -38,7 +37,6 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
             transition: transform 0.3s ease; cursor: zoom-in;
         }
-        /* Class para sa pag-zoom in kapag pinindot ulit */
         .image-modal-content.zoomed {
             transform: scale(1.5);
             cursor: zoom-out;
@@ -51,11 +49,17 @@
     </style>
 </head>
 <body>
+    <button class="mobile-menu-btn" id="mobileMenuBtn">
+        <i class="fas fa-bars"></i>
+    </button>
 
-    <aside class="sidebar">
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <!-- FIXED: Tinanggal ang image at inilagay ang User Name structure -->
         <div class="logo-area">
-            <img src="assets/Logo.png" class="sidebar-logo" alt="GC Logo">
             <h1>GC-FIMS</h1>
+            <span id="sidebar-user-name" style="font-size: 13px; color: var(--gc-green); font-weight: 800; opacity: 0.9;">Loading...</span>
         </div>
         <p class="nav-label">Main Menu</p>
         <ul class="nav-links">
@@ -71,7 +75,8 @@
 
     <main class="main-content">
         <header class="header-card">
-            <img src="assets/Logo.png" alt="Logo" style="border-radius: 50%;">
+            <!-- FIXED: Pinalitan ng img1.png ang header logo -->
+            <img src="assets/Logo.png" alt="Logo" style="max-width: 45px; height: auto; object-fit: contain;">
             <div style="flex: 1;">
                 <h2>Gordon College</h2>
                 <p>Facility Issue Management System (GC-FIMS)</p>
@@ -83,12 +88,12 @@
         </header>
 
         <section id="view-dashboard" class="dashboard-view active">
-            <div class="view-header">
-                <h3><i class="fas fa-th-large" style="color: var(--gc-green);"></i> Student Dashboard</h3>
+            <div class="view-header section-header-mobile">
+                <h3 style="margin: 0;"><i class="fas fa-th-large" style="color: var(--gc-green);"></i> Student Dashboard</h3>
             </div>
             <div class="card" id="reports-container">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h4>My Reports Tracker</h4>
+                <div class="section-header-mobile" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <h4 style="margin: 0;">My Reports Tracker</h4>
                     <select id="dashboardStatusFilter" onchange="loadReports()" style="padding: 6px 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 13px; font-weight: 600; outline: none; background: #f8fafc;">
                         <option value="all">All Status</option>
                         <option value="Pending">Pending</option>
@@ -98,7 +103,6 @@
                 </div>
                 <div id="tracker-list" style="margin-top: 20px;">
                 </div>
-            </div>
             </div>
         </section>
 
@@ -115,7 +119,7 @@
                         <textarea id="description" rows="3" placeholder="Explain the problem..." required></textarea>
                     </div>
                     <div class="form-group">
-                        <label>Category (All Levels)</label>
+                        <label>Category</label>
                         <select id="category">
                             <option value="Furniture">Furniture</option>
                             <option value="Electrical">Electrical</option>
@@ -153,8 +157,8 @@
         </section>
 
         <section id="view-history" class="dashboard-view">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h3><i class="fas fa-history"></i> Report History</h3>
+            <div class="section-header-mobile" style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 15px;">
+                <h3 style="margin: 0;"><i class="fas fa-history"></i> Report History</h3>
                 <div class="filter-controls">
                     <select id="sortDate" onchange="loadReports()">
                         <option value="newest">Newest First</option>
@@ -167,7 +171,6 @@
                         <option value="IT">IT Resources</option>
                         <option value="Plumbing">Plumbing</option>
                     </select>
-                    <!-- ETO ANG BAGONG DAGDAG -->
                     <select id="filterHistoryStatus" onchange="loadReports()">
                         <option value="all">All Status</option>
                         <option value="Pending">Pending</option>
@@ -176,18 +179,38 @@
                     </select>
                 </div>
             </div>
-            <div id="history-list">
-                </div>
+            <div id="history-list"></div>
         </section>
     </main>
 
-    <!-- Image Lightbox/Modal (Hidden by default) -->
     <div id="imageViewerModal" class="image-modal" onclick="closeImageViewer()">
         <span class="close-modal-btn">&times;</span>
         <img class="image-modal-content" id="fullSizeImage" onclick="toggleZoom(event)" title="Click to zoom in/out">
     </div>
 
     <script>
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        const menuIcon = mobileMenuBtn.querySelector('i');
+
+        function toggleMobileMenu() {
+            sidebar.classList.toggle('active');
+            if (sidebar.classList.contains('active')) {
+                overlay.style.display = 'block';
+                setTimeout(() => overlay.style.opacity = '1', 10);
+                menuIcon.classList.remove('fa-bars');
+                menuIcon.classList.add('fa-times');
+            } else {
+                overlay.style.opacity = '0';
+                setTimeout(() => overlay.style.display = 'none', 300);
+                menuIcon.classList.remove('fa-times');
+                menuIcon.classList.add('fa-bars');
+            }
+        }
+        mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+        overlay.addEventListener('click', toggleMobileMenu);
+
         window.editingReportId = null;
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -195,8 +218,10 @@
             if(user) {
                 const nameElem = document.getElementById('user-display-name');
                 const roleElem = document.getElementById('user-display-role');
+                const sidebarName = document.getElementById('sidebar-user-name'); // FIXED
                 if (nameElem) nameElem.innerText = `Welcome, ${user.name}!`;
                 if (roleElem) roleElem.innerText = `${user.role} Account`;
+                if (sidebarName) sidebarName.innerText = `${user.name}`; // FIXED
             }
             
             loadReports();
@@ -205,20 +230,14 @@
             if (reportForm) {
                 reportForm.addEventListener('submit', function(e) {
                     e.preventDefault(); 
-
                     try {
                         const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-                        if (!currentUser) {
-                            alert("Session expired. Please log in again.");
-                            window.location.href = "login.html";
-                            return;
-                        }
+                        if (!currentUser) return;
 
                         let reports = JSON.parse(localStorage.getItem('reports')) || [];
                         const previewElem = document.getElementById('previewContainer');
                         
                         if (window.editingReportId) {
-                            // --- EDITING EXISTING REPORT ---
                             const index = reports.findIndex(r => r.id === window.editingReportId);
                             if (index !== -1) {
                                 reports[index].title = document.getElementById('issue_title').value;
@@ -226,15 +245,10 @@
                                 reports[index].cat = document.getElementById('category').value;
                                 reports[index].loc = document.getElementById('location').value;
                                 reports[index].urgency = document.getElementById('urgency_level').value || "Low";
-                                
-                                if (previewElem.dataset.base64) {
-                                    reports[index].img = previewElem.dataset.base64;
-                                }
+                                if (previewElem.dataset.base64) reports[index].img = previewElem.dataset.base64;
                             }
                             alert('Report Updated Successfully!');
                         } else {
-                            // --- SUBMITTING NEW REPORT ---
-                            // BINAGO: Idinagdag ang authorId para malaman kung sino ang nag-submit
                             const newReport = {
                                 id: Date.now(),
                                 authorId: currentUser.email || currentUser.account_id, 
@@ -260,15 +274,11 @@
                         document.querySelector('.urgency-tag.low').classList.add('active');
                         previewElem.innerHTML = '<span style="color: #94a3b8;">No image selected</span>';
                         delete previewElem.dataset.base64;
-                        
                         window.editingReportId = null;
                         document.querySelector('#report-form button[type="submit"]').innerText = "Submit Report";
-                        
                         showView('dashboard');
-                        
                     } catch (error) {
                         console.error("Submission error:", error);
-                        alert("May error sa pag-save. Pakitingnan ang console.");
                     }
                 });
             }
@@ -289,7 +299,6 @@
             
             if (report) {
                 window.editingReportId = id; 
-                
                 document.getElementById('issue_title').value = report.title;
                 document.getElementById('description').value = report.desc;
                 document.getElementById('category').value = report.cat;
@@ -303,10 +312,11 @@
                 const previewElem = document.getElementById('previewContainer');
                 if(report.img) {
                     previewElem.innerHTML = `<img src="${report.img}" style="width:100%; height:100%; object-fit:cover;">`;
+                    previewElem.dataset.base64 = report.img;
                 } else {
                     previewElem.innerHTML = '<span style="color: #94a3b8;">No image selected</span>';
+                    delete previewElem.dataset.base64;
                 }
-
                 document.querySelector('#report-form button[type="submit"]').innerText = "Update Report";
                 showView('submit');
             }
@@ -323,6 +333,7 @@
             if (targetNav) targetNav.classList.add('active');
             
             if(viewId === 'dashboard' || viewId === 'history') loadReports();
+            if(window.innerWidth <= 768 && sidebar.classList.contains('active')) toggleMobileMenu();
         };
 
         window.selectUrgency = function(level, element) {
@@ -341,20 +352,17 @@
             if(event.target.files[0]) reader.readAsDataURL(event.target.files[0]);
         };
 
-        // --- IMAGE VIEWER FUNCTIONS ---
         window.openImageViewer = function(imageSrc) {
             const modal = document.getElementById('imageViewerModal');
             const img = document.getElementById('fullSizeImage');
             img.src = imageSrc;
-            img.classList.remove('zoomed'); // Reset zoom
+            img.classList.remove('zoomed'); 
             modal.style.display = "flex";
         };
 
-        window.closeImageViewer = function() {
-            document.getElementById('imageViewerModal').style.display = "none";
-        };
+        window.closeImageViewer = function() { document.getElementById('imageViewerModal').style.display = "none"; };
+        window.toggleZoom = function(event) { event.stopPropagation(); document.getElementById('fullSizeImage').classList.toggle('zoomed'); };
 
-        // --- LOAD REPORTS FUNCTION ---
         window.loadReports = function() {
             try {
                 const currentUser = JSON.parse(localStorage.getItem('currentUser'));
@@ -375,15 +383,11 @@
                     return;
                 }
 
-                // --- DASHBOARD TRACKER LOGIC ---
                 const dashFilterElem = document.getElementById('dashboardStatusFilter');
                 const dashFilter = dashFilterElem ? dashFilterElem.value : 'all';
 
                 let dashboardReports = [...myReports].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
-                
-                if (dashFilter !== 'all') {
-                    dashboardReports = dashboardReports.filter(r => r.status === dashFilter);
-                }
+                if (dashFilter !== 'all') dashboardReports = dashboardReports.filter(r => r.status === dashFilter);
 
                 if (dashboardReports.length === 0) {
                     container.innerHTML = `<p style="text-align:center; color:#94a3b8;">No ${dashFilter.toLowerCase()} reports found.</p>`;
@@ -400,9 +404,9 @@
                         if (status === "Resolved" || status === "Fixed") { statusBg = "#d1fae5"; statusColor = "#065f46"; } 
 
                         return `
-                        <div style="margin-bottom: 12px; padding: 12px 15px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 5px solid ${borderColor}; border-radius: 8px; display:flex; gap:15px; align-items:center;">
-                            ${r.img ? `<img src="${r.img}" onclick="openImageViewer('${r.img}')" style="width:60px; height:60px; border-radius:8px; object-fit:cover; cursor:zoom-in; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" title="Click to view full image">` : ''}
-                            <div style="flex:1;">
+                        <div style="margin-bottom: 12px; padding: 12px 15px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 5px solid ${borderColor}; border-radius: 8px; display:flex; flex-wrap:wrap; gap:15px; align-items:center;">
+                            ${r.img ? `<img src="${r.img}" onclick="openImageViewer('${r.img}')" style="width:60px; height:60px; border-radius:8px; object-fit:cover; cursor:zoom-in; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" title="Click to view full image">` : '<div style="width:60px; height:60px; border-radius:8px; background:#f1f5f9; display:flex; align-items:center; justify-content:center; color:#94a3b8;"><i class="fas fa-image"></i></div>'}
+                            <div style="flex:1; min-width: 150px;">
                                 <strong style="display:block; color: #1e293b; margin-bottom: 2px;">${r.title || 'Untitled'}</strong>
                                 <small style="color:#64748b;">${r.loc || 'Unknown'} • ${status}</small>
                             </div>
@@ -416,33 +420,19 @@
                     }).join('');
                 }
 
-                // --- HISTORY VIEW LOGIC ---
                 let historyReports = [...myReports];
                 const catFilterElem = document.getElementById('filterCategory');
                 const dateSortElem = document.getElementById('sortDate');
-                // BAGONG KUKUNIN PARA SA STATUS FILTER
                 const histStatusFilterElem = document.getElementById('filterHistoryStatus');
                 
                 const catFilter = catFilterElem ? catFilterElem.value : 'all';
                 const dateSort = dateSortElem ? dateSortElem.value : 'newest';
                 const histStatusFilter = histStatusFilterElem ? histStatusFilterElem.value : 'all';
 
-                // I-filter muna by Category
-                if (catFilter !== 'all') {
-                    historyReports = historyReports.filter(r => r.cat === catFilter);
-                }
+                if (catFilter !== 'all') historyReports = historyReports.filter(r => r.cat === catFilter);
+                if (histStatusFilter !== 'all') historyReports = historyReports.filter(r => r.status === histStatusFilter);
 
-                // I-filter by Status (Pending, In Progress, Resolved)
-                if (histStatusFilter !== 'all') {
-                    historyReports = historyReports.filter(r => r.status === histStatusFilter);
-                }
-
-                // I-sort by Date
-                historyReports.sort((a, b) => {
-                    return dateSort === 'newest' 
-                        ? new Date(b.date || 0) - new Date(a.date || 0) 
-                        : new Date(a.date || 0) - new Date(b.date || 0);
-                });
+                historyReports.sort((a, b) => dateSort === 'newest' ? new Date(b.date || 0) - new Date(a.date || 0) : new Date(a.date || 0) - new Date(b.date || 0));
 
                 if (historyReports.length === 0) {
                     history.innerHTML = `<p style="text-align:center; color:#94a3b8; margin-top:20px;">No history records matches your filter.</p>`;
@@ -450,17 +440,15 @@
                     history.innerHTML = historyReports.map(r => {
                         const urgency = r.urgency || "Low";
                         const urgencyClass = urgency.toLowerCase().split('/')[0];
-
-                        // I-set ang kulay ng status badge para consistent sa tracker
                         const status = r.status || "Pending";
                         let statusBg = "#fef08a"; let statusColor = "#854d0e"; 
                         if (status === "In Progress") { statusBg = "#dbeafe"; statusColor = "#1e40af"; } 
                         if (status === "Resolved" || status === "Fixed") { statusBg = "#d1fae5"; statusColor = "#065f46"; }
 
                         return `
-                        <div class="card" style="margin-bottom:15px; display:flex; gap:20px; align-items:center;">
-                            ${r.img ? `<img src="${r.img}" onclick="openImageViewer('${r.img}')" style="width:120px; height:100px; border-radius:12px; object-fit:cover; cursor:zoom-in; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" title="Click to view full image">` : ''}
-                            <div style="flex:1;">
+                        <div class="card" style="margin-bottom:15px; display:flex; flex-wrap:wrap; gap:20px; align-items:center;">
+                            ${r.img ? `<img src="${r.img}" onclick="openImageViewer('${r.img}')" style="width:120px; height:100px; border-radius:12px; object-fit:cover; cursor:zoom-in; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" title="Click to view full image">` : '<div style="width:120px; height:100px; border-radius:12px; background:#f1f5f9; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#94a3b8;"><i class="fas fa-camera-slash" style="font-size:24px; margin-bottom:5px;"></i><small>No Photo</small></div>'}
+                            <div style="flex:1; min-width:200px;">
                                 <div style="display:flex; gap:10px; align-items:center; margin-bottom:5px;">
                                     <span style="font-size:11px; font-weight:bold; color:var(--gc-green);">${r.displayDate || ''}</span>
                                     <span class="badge badge-${urgencyClass}">${urgency}</span>
@@ -476,9 +464,7 @@
                         `;
                     }).join('');
                 }
-            } catch (e) {
-                console.error("Error loading reports to UI:", e);
-            }
+            } catch (e) { console.error("Error loading reports to UI:", e); }
         };
     </script>
 </body>

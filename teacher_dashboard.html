@@ -13,13 +13,13 @@
         .urgency-selector { display: flex; gap: 15px; margin-top: 10px; }
         .urgency-tag { 
             padding: 10px 20px; border-radius: 12px; cursor: pointer; border: 2px solid #e2e8f0;
-            font-weight: 700; transition: 0.3s; display: flex; align-items: center; gap: 8px; font-size: 14px;
+            font-weight: 700; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px;
         }
         .urgency-tag.low:hover, .urgency-tag.low.active { border-color: #10b981; background: #ecfdf5; color: #065f46; }
         .urgency-tag.medium:hover, .urgency-tag.medium.active { border-color: #f59e0b; background: #fffbeb; color: #92400e; }
         .urgency-tag.high:hover, .urgency-tag.high.active { border-color: #ef4444; background: #fef2f2; color: #991b1b; }
 
-        .filter-controls { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .filter-controls { display: flex; gap: 10px; flex-wrap: wrap; }
         .filter-controls select { width: auto; padding: 8px 15px; border-radius: 8px; background: white; border: 1px solid #e2e8f0; outline: none;}
 
         .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
@@ -45,11 +45,21 @@
 </head>
 <body>
 
-    <aside class="sidebar">
+    <!-- MOBILE MENU TOGGLE BUTTON (Upper Left) -->
+    <button class="mobile-menu-btn" id="mobileMenuBtn">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- MOBILE DARK OVERLAY -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <!-- Inayos ang Logo Area, tinanggal ang image at dinagdag ang Name -->
         <div class="logo-area">
-            <img src="assets/Logo.png" class="sidebar-logo" alt="GC Logo">
             <h1>GC-FIMS</h1>
+            <span id="sidebar-user-name" style="font-size: 13px; color: var(--gc-green); font-weight: 800; opacity: 0.9;">Loading...</span>
         </div>
+        
         <p class="nav-label">Main Menu</p>
         <ul class="nav-links">
             <li id="nav-dashboard" class="active"><a onclick="showView('dashboard')"><i class="fas fa-chalkboard-teacher"></i> Dashboard</a></li>
@@ -76,12 +86,12 @@
         </header>
 
         <section id="view-dashboard" class="dashboard-view active">
-            <div class="view-header">
-                <h3><i class="fas fa-chalkboard-teacher" style="color: var(--gc-green);"></i> Teacher Dashboard</h3>
+            <div class="view-header section-header-mobile">
+                <h3 style="margin: 0;"><i class="fas fa-chalkboard-teacher" style="color: var(--gc-green);"></i> Teacher Dashboard</h3>
             </div>
             <div class="card" id="reports-container">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h4>My Reports Tracker</h4>
+                <div class="section-header-mobile" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <h4 style="margin: 0;">My Reports Tracker</h4>
                     <select id="dashboardStatusFilter" onchange="loadReports()" style="padding: 6px 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 13px; font-weight: 600; outline: none; background: #f8fafc;">
                         <option value="all">All Status</option>
                         <option value="Pending">Pending</option>
@@ -99,7 +109,6 @@
                 <form id="report-form" class="form-grid">
                     <div class="form-group full-width">
                         <label>Issue Title</label>
-                        <!-- Updated Placeholder for Teachers -->
                         <input type="text" id="issue_title" placeholder="e.g., Defective Aircon, Projector Bulb Replacement..." required>
                     </div>
                     <div class="form-group full-width">
@@ -108,7 +117,6 @@
                     </div>
                     <div class="form-group">
                         <label>Category</label>
-                        <!-- Updated Categories for Higher Impact Reporting -->
                         <select id="category">
                             <option value="Classroom Equipment">Classroom Equipment (Projector, PC)</option>
                             <option value="HVAC/Electrical">HVAC & Electrical (Aircon, Lights)</option>
@@ -132,7 +140,6 @@
                     </div>
 
                     <div class="form-group full-width">
-                        <!-- Photo is now optional -->
                         <label>Upload Photo Evidence <span style="color: #94a3b8; font-weight: normal;">(Optional)</span></label>
                         <input type="file" id="imageInput" accept="image/*" onchange="previewImage(event)">
                         <div class="image-preview" id="previewContainer">
@@ -147,8 +154,9 @@
         </section>
 
         <section id="view-history" class="dashboard-view">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h3><i class="fas fa-history"></i> My Report History</h3>
+            <!-- Inayos ang layout ng Header para hindi nakasagad sa gilid at mas maliit ang dropdowns -->
+            <div class="section-header-mobile" style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 15px;">
+                <h3 style="margin: 0;"><i class="fas fa-history"></i> My Report History</h3>
                 <div class="filter-controls">
                     <select id="sortDate" onchange="loadReports()">
                         <option value="newest">Newest First</option>
@@ -174,13 +182,46 @@
     </div>
 
     <script>
+        // ==========================================
+        // MOBILE HAMBURGER MENU LOGIC
+        // ==========================================
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        const menuIcon = mobileMenuBtn.querySelector('i');
+
+        function toggleMobileMenu() {
+            sidebar.classList.toggle('active');
+            
+            if (sidebar.classList.contains('active')) {
+                overlay.style.display = 'block';
+                setTimeout(() => overlay.style.opacity = '1', 10);
+                menuIcon.classList.remove('fa-bars');
+                menuIcon.classList.add('fa-times');
+            } else {
+                overlay.style.opacity = '0';
+                setTimeout(() => overlay.style.display = 'none', 300);
+                menuIcon.classList.remove('fa-times');
+                menuIcon.classList.add('fa-bars');
+            }
+        }
+
+        mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+        overlay.addEventListener('click', toggleMobileMenu); 
+
+        // ==========================================
+        // CORE DASHBOARD LOGIC
+        // ==========================================
         window.editingReportId = null;
 
         document.addEventListener('DOMContentLoaded', () => {
             const user = JSON.parse(localStorage.getItem('currentUser'));
             if(user) {
+                // Dinagdag: Update Sidebar Username
                 const nameElem = document.getElementById('user-display-name');
+                const sidebarName = document.getElementById('sidebar-user-name');
                 if (nameElem) nameElem.innerText = `Welcome, ${user.name}!`;
+                if (sidebarName) sidebarName.innerText = `${user.name}`;
             }
             
             loadReports();
@@ -189,14 +230,9 @@
             if (reportForm) {
                 reportForm.addEventListener('submit', function(e) {
                     e.preventDefault(); 
-
                     try {
                         const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-                        if (!currentUser) {
-                            alert("Session expired. Please log in again.");
-                            window.location.href = "login.html";
-                            return;
-                        }
+                        if (!currentUser) return;
 
                         let reports = JSON.parse(localStorage.getItem('reports')) || [];
                         const previewElem = document.getElementById('previewContainer');
@@ -209,7 +245,6 @@
                                 reports[index].cat = document.getElementById('category').value;
                                 reports[index].loc = document.getElementById('location').value;
                                 reports[index].urgency = document.getElementById('urgency_level').value || "Low";
-                                
                                 if (previewElem.dataset.base64) {
                                     reports[index].img = previewElem.dataset.base64;
                                 }
@@ -224,7 +259,7 @@
                                 cat: document.getElementById('category').value,
                                 loc: document.getElementById('location').value,
                                 urgency: document.getElementById('urgency_level').value || "Low",
-                                img: previewElem.dataset.base64 || '', // Empty kung walang upload
+                                img: previewElem.dataset.base64 || '',
                                 date: new Date().toISOString(),
                                 displayDate: new Date().toLocaleDateString(),
                                 status: 'Pending' 
@@ -241,14 +276,12 @@
                         document.querySelector('.urgency-tag.low').classList.add('active');
                         previewElem.innerHTML = '<span style="color: #94a3b8;">No image selected</span>';
                         delete previewElem.dataset.base64;
-                        
                         window.editingReportId = null;
                         document.querySelector('#report-form button[type="submit"]').innerText = "Submit Report";
                         
                         showView('dashboard');
                     } catch (error) {
                         console.error("Submission error:", error);
-                        alert("May error sa pag-save. Pakitingnan ang console.");
                     }
                 });
             }
@@ -257,13 +290,10 @@
         window.deleteReport = function(id) {
             let reports = JSON.parse(localStorage.getItem('reports')) || [];
             const report = reports.find(r => r.id === id);
-            
-            // SECURITY: Bawal burahin kung hindi na Pending
             if (report && report.status !== 'Pending') {
                 alert("You can only delete reports that are currently 'Pending'.");
                 return;
             }
-
             if(confirm("Are you sure you want to delete this report?")) {
                 reports = reports.filter(r => r.id !== id);
                 localStorage.setItem('reports', JSON.stringify(reports));
@@ -274,16 +304,12 @@
         window.editReport = function(id) {
             let reports = JSON.parse(localStorage.getItem('reports')) || [];
             const report = reports.find(r => r.id === id);
-            
-            // SECURITY: Bawal i-edit kung hindi na Pending
             if (report && report.status !== 'Pending') {
                 alert("You can only edit reports that are currently 'Pending'.");
                 return;
             }
-
             if (report) {
                 window.editingReportId = id; 
-                
                 document.getElementById('issue_title').value = report.title;
                 document.getElementById('description').value = report.desc;
                 document.getElementById('category').value = report.cat;
@@ -302,7 +328,6 @@
                     previewElem.innerHTML = '<span style="color: #94a3b8;">No image selected</span>';
                     delete previewElem.dataset.base64;
                 }
-
                 document.querySelector('#report-form button[type="submit"]').innerText = "Update Report";
                 showView('submit');
             }
@@ -319,6 +344,10 @@
             if (targetNav) targetNav.classList.add('active');
             
             if(viewId === 'dashboard' || viewId === 'history') loadReports();
+
+            if(window.innerWidth <= 768 && sidebar.classList.contains('active')) {
+                toggleMobileMenu();
+            }
         };
 
         window.selectUrgency = function(level, element) {
@@ -375,7 +404,6 @@
                     return;
                 }
 
-                // DASHBOARD TRACKER
                 const dashFilterElem = document.getElementById('dashboardStatusFilter');
                 const dashFilter = dashFilterElem ? dashFilterElem.value : 'all';
 
@@ -399,7 +427,6 @@
                         if (status === "In Progress") { statusBg = "#dbeafe"; statusColor = "#1e40af"; } 
                         if (status === "Resolved" || status === "Fixed") { statusBg = "#d1fae5"; statusColor = "#065f46"; } 
 
-                        // EDIT/DELETE Logic: Only show buttons if Pending
                         let actionButtons = '';
                         if (status === 'Pending') {
                             actionButtons = `
@@ -410,7 +437,6 @@
                             actionButtons = `<span style="font-size: 12px; color: #94a3b8; font-style: italic;"><i class="fas fa-lock"></i> Locked</span>`;
                         }
 
-                        // Placeholder kung walang inupload na picture ang guro
                         let imageHTML = r.img 
                             ? `<img src="${r.img}" onclick="openImageViewer('${r.img}')" style="width:60px; height:60px; border-radius:8px; object-fit:cover; cursor:zoom-in; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" title="Click to view full image">`
                             : `<div style="width:60px; height:60px; border-radius:8px; background:#f1f5f9; display:flex; align-items:center; justify-content:center; color:#94a3b8;"><i class="fas fa-image"></i></div>`;
@@ -431,7 +457,6 @@
                     }).join('');
                 }
 
-                // HISTORY VIEW
                 let historyReports = [...myReports];
                 const catFilterElem = document.getElementById('filterCategory');
                 const dateSortElem = document.getElementById('sortDate');

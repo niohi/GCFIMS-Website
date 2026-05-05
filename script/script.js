@@ -44,24 +44,30 @@ const users = [
 ];
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Awtomatikong ipasok ang buong listahan sa Admin Dashboard system
+    // Ginagawa ito para makita agad ng Admin ang lahat ng users mula sa script.js
+    if (!localStorage.getItem('appUsers') || JSON.parse(localStorage.getItem('appUsers')).length < 5) {
+        localStorage.setItem('appUsers', JSON.stringify(users));
+    }
+
     const loginForm = document.getElementById('login-form');
 
     if (loginForm) {
         loginForm.addEventListener('submit', (e) => {
             e.preventDefault(); 
 
-            // Get values from the login form inputs [cite: 33]
+            // Get values from the login form inputs[cite: 20]
             const emailInput = loginForm.querySelector('input[name="email"]').value;
             const passInput = loginForm.querySelector('input[name="password"]').value;
 
-            // Search for the user in our list 
+            // Search for the user in our list[cite: 20]
             const user = users.find(u => (u.email === emailInput || u.account_id === emailInput) && u.password === passInput);
 
             if (user) {
-                // Save the session to LocalStorage so dashboards can identify who is logged in 
+                // Save the session to LocalStorage so dashboards can identify who is logged in[cite: 20]
                 localStorage.setItem('currentUser', JSON.stringify(user));
 
-                // Redirection logic based on role 
+                // Redirection logic based on role[cite: 20]
                 if (user.role === "Admin") {
                     window.location.href = "admin_dashboard.html";
                 } else if (user.role === "Teacher") {
@@ -69,7 +75,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if (user.role === "Maintenance Staff" || user.role === "Maintenance Supervisor") {
                     window.location.href = "maintenance_dashboard.html";
                 } else {
-                    // This covers the "Student" role specifically requested [cite: 19]
                     window.location.href = "student_dashboard.html";
                 }
             } else {
