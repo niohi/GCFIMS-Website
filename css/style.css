@@ -1,0 +1,301 @@
+/* =========================================
+   GC-FIMS AUTH STYLE - PERFECTLY RESPONSIVE
+   ========================================= */
+:root {
+    --primary-orange: #FF9800;
+    --dark-green: #006400;
+    --cream-bg: #fff5e6;
+    --white: #ffffff;
+    --text-dark: #333333;
+    --text-gray: #666666;
+}
+
+* { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+    font-family: 'Inter', sans-serif; 
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: url('/assets/g.png') center / cover no-repeat fixed;
+    position: relative;
+    padding: 20px; /* Reduced to 10px via media query on mobile */
+    overflow-x: hidden; /* Prevent horizontal scroll bar */
+}
+
+body::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(1, 18, 4, 0.6); /* Slightly darker overlay for better text contrast */
+    z-index: 0;
+}
+
+/* Main Container */
+.layout {
+    width: 100%;
+    max-width: 1100px;
+    background: var(--white);
+    border-radius: 30px;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+    margin: auto; /* Ensures centering */
+}
+
+/* Header Section */
+.header {
+    background: var(--cream-bg);
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+/* Req: Make logo circular and handle background if image isn't perfect PN */
+.header__logo { 
+    width: 60px; 
+    height: 60px; 
+    border-radius: 50%; 
+    object-fit: cover; /* Ensures the image covers the circle area */
+    border: 2px solid white; 
+    background-color: white; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.header__title { color: var(--dark-green); font-weight: 900; font-size: 28px; }
+.header__subtitle { color: var(--primary-orange); font-size: 13px; font-weight: 700; }
+
+/* Content Split */
+.layout__content { 
+    display: flex; 
+    flex: 1; 
+    min-height: 500px; /* Minimum height for desktop look */
+}
+
+/* LEFT SIDE: Info Section */
+.auth-info {
+    flex: 1.2;
+    background: var(--cream-bg);
+    padding: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.auth-info__card {
+    background: var(--white);
+    padding: 45px;
+    border-radius: 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    max-width: 480px;
+}
+
+.auth-info__heading {
+    font-size: 36px;
+    font-weight: 900;
+    color: var(--primary-orange);
+    line-height: 1.2;
+    margin-bottom: 20px;
+}
+
+.auth-info__description {
+    color: #475569;
+    font-size: 16px;
+    line-height: 1.7;
+}
+
+/* RIGHT SIDE: Panel Section */
+.auth-panel {
+    flex: 1;
+    background: var(--primary-orange);
+    padding: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.auth-card {
+    background: var(--white);
+    width: 100%;
+    max-width: 380px;
+    padding: 40px;
+    border-radius: 25px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+}
+
+/* Title on Card */
+.auth-card__heading {
+    font-size: 28px; 
+    font-weight: 800; 
+    margin-bottom: 5px;
+    color: var(--text-dark);
+}
+
+.auth-card__subheading {
+    color: var(--text-gray); 
+    font-size: 14px; 
+    margin-bottom: 30px;
+}
+
+/* Form Elements */
+.form__group { margin-bottom: 20px; }
+.form__label { display: block; font-weight: 700; margin-bottom: 8px; font-size: 14px; color: var(--text-dark); }
+.form__input-wrapper { position: relative; }
+.form__input {
+    width: 100%;
+    padding: 16px 16px 16px 48px;
+    border: 2px solid #eeeeee;
+    border-radius: 12px;
+    background: #fdfdfd;
+    font-size: 15px;
+    transition: 0.3s;
+}
+
+.form__input:focus {
+    border-color: var(--primary-orange);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
+}
+
+.form__icon { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: #aaaaaa; font-size: 16px; }
+
+.button--primary {
+    width: 100%;
+    padding: 16px;
+    background: var(--primary-orange);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s;
+    font-size: 16px;
+    margin-top: 10px;
+}
+
+.button--primary:hover { filter: brightness(0.9); transform: translateY(-1px); }
+.button--primary:active { transform: translateY(0); }
+
+.auth-card__footer { text-align: center; margin-top: 25px; }
+.auth-card__link { color: var(--primary-orange); text-decoration: none; font-weight: 700; font-size: 14px; transition: 0.2s; }
+.auth-card__link:hover { color: var(--dark-green); text-decoration: underline; }
+
+/* =========================================
+   MEDIA QUERIES FOR RESPONSIVENESS
+   ========================================= */
+
+/* Laptops & Tablets (Stack Content Early) */
+@media (max-width: 1024px) {
+    .layout {
+        border-radius: 20px;
+    }
+
+    .header {
+        padding: 15px 25px;
+    }
+
+    .layout__content {
+        flex-direction: column; /* Stack vertically */
+        min-height: auto;
+    }
+
+    .auth-info {
+        padding: 50px 30px;
+    }
+
+    .auth-panel {
+        padding: 50px 30px;
+    }
+
+    .auth-info__card {
+        max-width: 100%; /* Stretch across the stacked area */
+        box-shadow: none;
+        background: rgba(255, 255, 255, 0.6);
+        text-align: center;
+    }
+}
+
+/* Mobile Devices */
+@media (max-width: 768px) {
+    body {
+        padding: 10px; /* Maximize screen space on mobile PN */
+    }
+
+    .header {
+        flex-direction: column; /* Stack logo and text vertically PN */
+        text-align: center;
+        gap: 10px;
+        padding: 20px 15px;
+    }
+
+    .header__logo {
+        width: 70px;
+        height: 70px;
+    }
+
+    .header__title {
+        font-size: 24px;
+    }
+
+    .header__subtitle {
+        font-size: 12px;
+    }
+
+    .auth-info {
+        padding: 40px 15px; /* Minimal side padding PN */
+    }
+
+    .auth-panel {
+        padding: 30px 15px;
+    }
+
+    .auth-info__card {
+        padding: 25px 15px;
+        border-radius: 15px;
+    }
+
+    .auth-card {
+        padding: 30px 20px;
+        border-radius: 20px;
+    }
+
+    .auth-info__heading {
+        font-size: 26px; /* Scaled down heading PN */
+        margin-bottom: 10px;
+    }
+
+    .auth-info__description {
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    .auth-card__heading {
+        font-size: 24px;
+    }
+
+    .form__input {
+        padding: 14px 14px 14px 44px;
+        font-size: 14px;
+    }
+}
+
+/* Ultra-Small Screens */
+@media (max-width: 480px) {
+    .auth-card {
+        padding: 25px 15px;
+    }
+    
+    .button--primary {
+        padding: 14px;
+    }
+}

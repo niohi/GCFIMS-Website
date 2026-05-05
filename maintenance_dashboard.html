@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GC-FIMS | Maintenance Operations</title>
+    <link rel="stylesheet" href="css/dashboard_style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        .user-welcome { text-align: right; border-left: 2px solid #e2e8f0; padding-left: 20px; }
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+        
+        .reporter-badge { background: #f1f5f9; color: #475569; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; margin-top: 5px;}
+        .faculty-priority { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+
+        .status-dropdown { padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: bold; cursor: pointer; outline: none; }
+        .status-dropdown.pending { background: #fef08a; color: #854d0e; }
+        .status-dropdown.progress { background: #dbeafe; color: #1e40af; }
+        .status-dropdown.resolved { background: #d1fae5; color: #065f46; }
+
+        /* Image Modal Styles */
+        .image-modal {
+            display: none; position: fixed; z-index: 9999; left: 0; top: 0;
+            width: 100%; height: 100%; background-color: rgba(0,0,0,0.85);
+            align-items: center; justify-content: center; backdrop-filter: blur(5px);
+        }
+        .image-modal-content {
+            max-width: 80%; max-height: 85%; border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            transition: transform 0.3s ease; cursor: zoom-in;
+        }
+        .image-modal-content.zoomed { transform: scale(1.5); cursor: zoom-out; }
+        .close-modal-btn {
+            position: absolute; top: 20px; right: 40px; color: white;
+            font-size: 40px; font-weight: bold; cursor: pointer; transition: 0.2s;
+        }
+        .close-modal-btn:hover { color: #ef4444; }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="logo-area">
+            <img src="assets/Logo.png" class="sidebar-logo" alt="GC Logo">
+            <h1>GC-FIMS</h1>
+        </div>
+        <p class="nav-label">Maintenance Hub</p>
+        <ul class="nav-links">
+            <li id="nav-dashboard" class="active"><a onclick="showView('dashboard')"><i class="fas fa-tools"></i> Action Hub</a></li>
+            <li id="nav-history"><a onclick="showView('history')"><i class="fas fa-check-square"></i> Resolved Tasks</a></li>
+        </ul>
+        <p class="nav-label" style="margin-top:auto;">Account</p>
+        <ul class="nav-links">
+            <li class="logout-link"><a href="login.html"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <header class="header-card">
+            <img src="assets/Logo.png" alt="Logo" style="border-radius: 50%;">
+            <div style="flex: 1;">
+                <h2>Gordon College</h2>
+                <p>Facility Issue Management System (GC-FIMS)</p>
+            </div>
+            <div class="user-welcome">
+                <span id="user-display-name" style="font-weight: 800; color: var(--gc-green); display: block; font-size: 18px;">Welcome, Maintenance!</span>
+                <small id="user-display-role" style="color: #64748b; font-weight: 600;">Maintenance Staff</small>
+            </div>
+        </header>
+
+        <section id="view-dashboard" class="dashboard-view active">
+            <div class="view-header">
+                <h3><i class="fas fa-tools" style="color: var(--gc-green);"></i> Active Task Hub</h3>
+            </div>
+            
+            <div class="card" id="reports-container">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h4>Campus-Wide Incident Reports</h4>
+                    <select id="dashboardStatusFilter" onchange="loadReports()" style="padding: 6px 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 13px; font-weight: 600; outline: none; background: #f8fafc;">
+                        <option value="all">Show All Active</option>
+                        <option value="Pending">Pending Only</option>
+                        <option value="In Progress">In Progress Only</option>
+                    </select>
+                </div>
+                <div id="tracker-list" style="margin-top: 20px;"></div>
+            </div>
+        </section>
+
+        <section id="view-history" class="dashboard-view">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3><i class="fas fa-check-square"></i> Resolved & Completed Tasks</h3>
+            </div>
+            <div id="history-list"></div>
+        </section>
+    </main>
+
+    <!-- Image Lightbox/Modal -->
+    <div id="imageViewerModal" class="image-modal" onclick="closeImageViewer()">
+        <span class="close-modal-btn">&times;</span>
+        <img class="image-modal-content" id="fullSizeImage" onclick="toggleZoom(event)">
+    </div>
+
+    <script>
+        // Data base ng lahat ng Users para mahanap ang Pangalan at Role base sa authorId
+        const usersDB = [
+            { account_id: "TECH001", role: "Teacher", name: "PROFESSOR X" }, 
+            { email: "202512905@gordoncollege.edu.ph", role: "Student", name: "AQUINO, RAFAEL" },
+            { email: "202512219@gordoncollege.edu.ph", role: "Student", name: "LEDESMA, DANNIEL LAWRENCE" },
+            { email: "202511669@gordoncollege.edu.ph", role: "Student", name: "ARMERO, MARCO LAWRENCE" },
+            { email: "202513107@gordoncollege.edu.ph", role: "Student", name: "DELGADO, MATT ANDREI" },
+            { email: "202311827@gordoncollege.edu.ph", role: "Student", name: "DEMETRIO, SAMANTHA NICOLE" },
+            { email: "202513619@gordoncollege.edu.ph", role: "Student", name: "DOMINGO, JERSON" },
+            { email: "202511705@gordoncollege.edu.ph", role: "Student", name: "EDER, ANGEL THERESE" },
+            { email: "202512657@gordoncollege.edu.ph", role: "Student", name: "ELLANO, JOHN DENVER" },
+            { email: "202514653@gordoncollege.edu.ph", role: "Student", name: "ENCIO, LEANNE MAE" },
+            { email: "202510593@gordoncollege.edu.ph", role: "Student", name: "ESTRELLADO, JOHN CHRISTOPHER" },
+            { email: "202512033@gordoncollege.edu.ph", role: "Student", name: "EYAS, JOHN CARLO" },
+            { email: "202510612@gordoncollege.edu.ph", role: "Student", name: "FERNANDEZ, LHORD JIAN HERWIN" },
+            { email: "202513723@gordoncollege.edu.ph", role: "Student", name: "FIEL, JHON DANIELLE" },
+            { email: "202510383@gordoncollege.edu.ph", role: "Student", name: "FOGATA, CARL JOHN SEBASTIAN" },
+            { email: "202512549@gordoncollege.edu.ph", role: "Student", name: "GUIAO, RUSSEL" },
+            { email: "202512215@gordoncollege.edu.ph", role: "Student", name: "HERNANDEZ, ANDREI JENRIX" },
+            { email: "202511085@gordoncollege.edu.ph", role: "Student", name: "IGNACIO, YVES ZEP" },
+            { email: "202512983@gordoncollege.edu.ph", role: "Student", name: "JIMENEZ, PRINCESS JOHANNA" },
+            { email: "202512391@gordoncollege.edu.ph", role: "Student", name: "JORDAN, NASH" },
+            { email: "202514545@gordoncollege.edu.ph", role: "Student", name: "LABAN, JEFF ASHLEY" },
+            { email: "202511006@gordoncollege.edu.ph", role: "Student", name: "LABIS, TRISTHAN JAYKE" },
+            { email: "202512187@gordoncollege.edu.ph", role: "Student", name: "LABRADOR, ARWIN" },
+            { email: "202513401@gordoncollege.edu.ph", role: "Student", name: "LAGRIMAS, NATHANIEL" },
+            { email: "202510525@gordoncollege.edu.ph", role: "Student", name: "LAYUG, JOSEPH KYLE" },
+            { email: "202511537@gordoncollege.edu.ph", role: "Student", name: "LUCBAN, JHON SANDER" },
+            { email: "202513957@gordoncollege.edu.ph", role: "Student", name: "MADAYAG, RAINIER" },
+            { email: "202511115@gordoncollege.edu.ph", role: "Student", name: "NAGUIAT, AR-SIE" },
+            { email: "202511937@gordoncollege.edu.ph", role: "Student", name: "ORDONIO, MHELBHEN JOHN BENEDICT" },
+            { email: "202514259@gordoncollege.edu.ph", role: "Student", name: "OTEYZA, CLARIZA" },
+            { email: "202512601@gordoncollege.edu.ph", role: "Student", name: "ROQUE, JOSEPH CARL" },
+            { email: "202513413@gordoncollege.edu.ph", role: "Student", name: "SORVETO, ARLYN" }
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            if(user) {
+                document.getElementById('user-display-name').innerText = `Welcome, ${user.name}!`;
+                document.getElementById('user-display-role').innerText = `${user.role}`;
+            }
+            loadReports();
+        });
+
+        window.showView = function(viewId) {
+            document.querySelectorAll('.dashboard-view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
+            
+            const targetView = document.getElementById('view-' + viewId);
+            const targetNav = document.getElementById('nav-' + viewId);
+            
+            if (targetView) targetView.classList.add('active');
+            if (targetNav) targetNav.classList.add('active');
+            
+            loadReports();
+        };
+
+        // --- STATUS UPDATE FUNCTION ---
+        // Maintenance lang ang may dropdown para palitan ang status direkta
+        window.updateReportStatus = function(reportId, newStatus) {
+            let reports = JSON.parse(localStorage.getItem('reports')) || [];
+            const index = reports.findIndex(r => r.id === reportId);
+            if (index !== -1) {
+                reports[index].status = newStatus;
+                localStorage.setItem('reports', JSON.stringify(reports));
+                loadReports(); // I-refresh ang view
+            }
+        };
+
+        // IMAGE VIEWER LOGIC
+        window.openImageViewer = function(imageSrc) {
+            const modal = document.getElementById('imageViewerModal');
+            const img = document.getElementById('fullSizeImage');
+            img.src = imageSrc;
+            img.classList.remove('zoomed'); 
+            modal.style.display = "flex";
+        };
+
+        window.closeImageViewer = function() { document.getElementById('imageViewerModal').style.display = "none"; };
+        window.toggleZoom = function(event) { event.stopPropagation(); document.getElementById('fullSizeImage').classList.toggle('zoomed'); };
+
+        window.loadReports = function() {
+            try {
+                const rawReports = JSON.parse(localStorage.getItem('reports')) || [];
+                const container = document.getElementById('tracker-list');
+                const history = document.getElementById('history-list');
+
+                if (!container || !history) return;
+
+                if (rawReports.length === 0) {
+                    container.innerHTML = `<p style="text-align:center; color:#94a3b8;">No reports in the system.</p>`;
+                    history.innerHTML = `<p style="text-align:center; color:#94a3b8; margin-top:20px;">No resolved records yet.</p>`;
+                    return;
+                }
+
+                // 1. I-map ang User Info sa mga Reports
+                const enrichedReports = rawReports.map(r => {
+                    // Hanapin ang user sa DB base sa authorId (email or account_id)
+                    const reporter = usersDB.find(u => u.email === r.authorId || u.account_id === r.authorId);
+                    return {
+                        ...r,
+                        reporterName: reporter ? reporter.name : "Unknown User",
+                        reporterRole: reporter ? reporter.role : "Student"
+                    };
+                });
+
+                // 2. SORTING LOGIC: Priority sa Teacher, tapos by Date
+                enrichedReports.sort((a, b) => {
+                    // Rule 1: Kung Teacher si A at hindi Teacher si B, unahin si A
+                    if (a.reporterRole === 'Teacher' && b.reporterRole !== 'Teacher') return -1;
+                    if (a.reporterRole !== 'Teacher' && b.reporterRole === 'Teacher') return 1;
+                    
+                    // Rule 2: Kung parehong Teacher o parehong Student, i-sort kung sino ang pinakabago
+                    return new Date(b.date || 0) - new Date(a.date || 0);
+                });
+
+                // --- DASHBOARD (Active Tasks Only) ---
+                const dashFilter = document.getElementById('dashboardStatusFilter').value;
+                let activeReports = enrichedReports.filter(r => r.status !== 'Resolved'); // Tanggalin ang resolved sa action hub
+                
+                if (dashFilter !== 'all') {
+                    activeReports = activeReports.filter(r => r.status === dashFilter);
+                }
+
+                if (activeReports.length === 0) {
+                    container.innerHTML = `<p style="text-align:center; color:#94a3b8; padding: 20px;">No active tasks right now. Great job!</p>`;
+                } else {
+                    container.innerHTML = activeReports.map(r => {
+                        const urgency = r.urgency || "Low"; 
+                        let borderColor = "#10b981"; 
+                        if (urgency === "Medium") borderColor = "#f59e0b"; 
+                        if (urgency.includes("High")) borderColor = "#ef4444"; 
+
+                        const status = r.status || "Pending";
+                        let selectClass = status === 'Pending' ? 'pending' : 'progress';
+                        
+                        // Badge para malaman kung Teacher o Student
+                        const roleBadgeClass = r.reporterRole === 'Teacher' ? 'reporter-badge faculty-priority' : 'reporter-badge';
+                        const roleIcon = r.reporterRole === 'Teacher' ? '<i class="fas fa-star"></i>' : '<i class="fas fa-user"></i>';
+
+                        return `
+                        <div style="margin-bottom: 12px; padding: 15px; background-color: #ffffff; border: 1px solid #e2e8f0; border-left: 6px solid ${borderColor}; border-radius: 8px; display:flex; gap:15px; align-items: flex-start; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                            ${r.img ? `<img src="${r.img}" onclick="openImageViewer('${r.img}')" style="width:100px; height:100px; border-radius:8px; object-fit:cover; cursor:zoom-in; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" title="Click to view full image">` : ''}
+                            <div style="flex:1;">
+                                <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                                    <strong style="color: #1e293b; font-size: 16px;">${r.title || 'Untitled'}</strong>
+                                    <span class="badge badge-${urgency.toLowerCase().split('/')[0]}">${urgency}</span>
+                                </div>
+                                <p style="font-size:13px; color:#475569; margin-bottom: 8px; line-height: 1.4;">${r.desc}</p>
+                                <small style="color:#94a3b8; display: block;">📍 ${r.loc || 'Unknown'} &nbsp;|&nbsp; 📋 ${r.cat || 'General'}</small>
+                                <div class="${roleBadgeClass}">
+                                    ${roleIcon} Reported by: ${r.reporterName} (${r.reporterRole})
+                                </div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end; min-width: 140px;">
+                                <small style="color:#94a3b8; font-weight:bold;">${r.displayDate}</small>
+                                <!-- Interactive Status Dropdown for Maintenance -->
+                                <select class="status-dropdown ${selectClass}" onchange="updateReportStatus(${r.id}, this.value)">
+                                    <option value="Pending" ${status === 'Pending' ? 'selected' : ''}>Pending</option>
+                                    <option value="In Progress" ${status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                                    <option value="Resolved">Mark as Resolved ✔</option>
+                                </select>
+                            </div>
+                        </div>
+                        `;
+                    }).join('');
+                }
+
+                // --- HISTORY VIEW (Resolved Only) ---
+                const resolvedReports = enrichedReports.filter(r => r.status === 'Resolved');
+
+                if (resolvedReports.length === 0) {
+                    history.innerHTML = `<p style="text-align:center; color:#94a3b8; margin-top:20px;">No resolved tasks yet.</p>`;
+                } else {
+                    history.innerHTML = resolvedReports.map(r => {
+                        const urgency = r.urgency || "Low";
+                        const urgencyClass = urgency.toLowerCase().split('/')[0];
+                        
+                        const roleBadgeClass = r.reporterRole === 'Teacher' ? 'reporter-badge faculty-priority' : 'reporter-badge';
+
+                        return `
+                        <div class="card" style="margin-bottom:15px; display:flex; gap:20px; align-items:center; opacity: 0.8;">
+                            ${r.img ? `<img src="${r.img}" onclick="openImageViewer('${r.img}')" style="width:100px; height:80px; border-radius:12px; object-fit:cover; cursor:zoom-in;">` : ''}
+                            <div style="flex:1;">
+                                <div style="display:flex; gap:10px; align-items:center; margin-bottom:5px;">
+                                    <span style="font-size:11px; font-weight:bold; color:var(--gc-green);">${r.displayDate || ''}</span>
+                                    <span class="badge badge-${urgencyClass}">${urgency}</span>
+                                </div>
+                                <h4 style="margin:0 0 5px 0; text-decoration: line-through; color: #64748b;">${r.title || 'Untitled'}</h4>
+                                <p style="font-size:13px; color:#94a3b8;">Location: ${r.loc || ''} | Reported by: ${r.reporterName}</p>
+                            </div>
+                            <div style="text-align:right;">
+                                <span style="background:#d1fae5; padding:6px 15px; border-radius:20px; font-size:12px; font-weight:bold; color:#065f46; text-transform:uppercase;"><i class="fas fa-check-circle"></i> Resolved</span>
+                            </div>
+                        </div>
+                        `;
+                    }).join('');
+                }
+            } catch (e) {
+                console.error("Error loading reports to UI:", e);
+            }
+        };
+    </script>
+</body>
+</html>
