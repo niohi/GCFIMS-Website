@@ -6,7 +6,7 @@ const users = [
     // Staff and Admin Accounts
     { account_id: "ADMIN001", password: "admin789", role: "Admin", name: "ADMINISTRATOR" }, 
     { account_id: "TECH001", password: "teacherx", role: "Teacher", name: "PROFESSOR X" }, 
-    { account_id: "Repairman", password: "staff123", role: "Maintenance Staff", name: "MAINTENANCE STAFF" }, 
+    { account_id: "Maintenance", password: "staff123", role: "Maintenance Staff", name: "MAINTENANCE STAFF" }, 
     { account_id: "Supervisor", password: "super456", role: "Maintenance Supervisor", name: "MAINTENANCE SUPERVISOR" },
 
     // Student Accounts - Default Password: "gc2026"
