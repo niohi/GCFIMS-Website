@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GC-FIMS | Maintenance Operations</title>
-    <link rel="icon" type="image/png" href="assets/favicon-32x32.png">
-    
+    <link rel="icon" type="image/png" href="assets/favicon-16x16.png">
     <link rel="stylesheet" href="css/dashboard_style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
@@ -19,6 +18,35 @@
         .status-dropdown.pending { background: #fef08a; color: #854d0e; }
         .status-dropdown.progress { background: #dbeafe; color: #1e40af; }
         .status-dropdown.resolved { background: #d1fae5; color: #065f46; }
+
+        /* FIXED: History/Dashboard Filters Alignment */
+        .history-controls-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .filters-group {
+            display: flex;
+            flex-direction: row;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .filters-group select {
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            background-color: #ffffff;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1e293b;
+            cursor: pointer;
+            min-width: 140px;
+            outline: none;
+            transition: all 0.2s;
+        }
 
         .image-modal {
             display: none; position: fixed; z-index: 9999; left: 0; top: 0;
@@ -36,6 +64,19 @@
             font-size: 40px; font-weight: bold; cursor: pointer; transition: 0.2s;
         }
         .close-modal-btn:hover { color: #ef4444; }
+
+        /* FIXED: HEADER CARD & LOGO AREA LOGIC */
+        .logo-area { display: flex; flex-direction: column; align-items: center; padding: 20px 0 10px 0; text-align: center; }
+        .sidebar-logo { max-width: 70px; height: auto; margin-bottom: 5px; }
+
+        .header-card .header__logos { display: none; gap: 15px; align-items: center; }
+        .header__logo-img { width: 65px; height: 65px; border-radius: 50%; object-fit: contain; border: 2px solid white; background-color: white; box-shadow: 0 4px 8px rgba(0,0,0,0.15); padding: 4px; }
+
+        @media (max-width: 768px) {
+            .header-card .header__logos { display: flex; justify-content: center; width: 100%; margin-bottom: 5px; }
+            .header-card { flex-direction: column; text-align: center; padding: 20px; gap: 10px; }
+            .user-welcome { text-align: center; border-left: none; padding-left: 0; margin-top: 15px; border-top: 1px solid #e2e8f0; padding-top: 10px; width: 100%; }
+        }
     </style>
 </head>
 <body>
@@ -46,10 +87,9 @@
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <aside class="sidebar" id="sidebar">
-        <!-- FIXED: Tinanggal ang image at inilagay ang User Name structure -->
         <div class="logo-area">
-            <h1>GC-FIMS</h1>
-            <span id="sidebar-user-name" style="font-size: 13px; color: var(--gc-green); font-weight: 800; opacity: 0.9;">Loading...</span>
+            <img src="assets/GCFIMSLOGO.png" alt="Logo" class="sidebar-logo">
+            <h1 style="font-size: 20px; color: #006400; font-weight: 900; margin-top: 5px; letter-spacing: 1px;">GC-FIMS</h1>
         </div>
         <p class="nav-label">Maintenance Hub</p>
         <ul class="nav-links">
@@ -64,39 +104,52 @@
 
     <main class="main-content">
         <header class="header-card">
-            <!-- FIXED: Pinalitan ng img1.png ang header logo -->
-            <img src="assets/Logo.png" alt="Logo" style="max-width: 45px; height: auto; object-fit: contain;">
+            <div class="header__logos">
+                <img src="assets/GCFIMSLOGO.png" class="header__logo-img" alt="GC-FIMS Logo">
+            </div>
             <div style="flex: 1;">
                 <h2>Gordon College</h2>
                 <p>Facility Issue Management System (GC-FIMS)</p>
             </div>
             <div class="user-welcome">
-                <span id="user-display-name" style="font-weight: 800; color: var(--gc-green); display: block; font-size: 18px;">Welcome, Maintenance!</span>
+                <span id="user-display-name" style="font-weight: 800; color: #006400; display: block; font-size: 18px;">Welcome, Maintenance!</span>
                 <small id="user-display-role" style="color: #64748b; font-weight: 600;">Maintenance Operations</small>
             </div>
         </header>
 
         <section id="view-dashboard" class="dashboard-view active">
             <div class="view-header section-header-mobile">
-                <h3 style="margin: 0;"><i class="fas fa-tools" style="color: var(--gc-green);"></i> Active Task Hub</h3>
+                <h3 style="margin: 0;"><i class="fas fa-tools" style="color: #006400;"></i> Active Task Hub</h3>
             </div>
             
             <div class="card" id="reports-container">
-                <div class="section-header-mobile" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div class="history-controls-wrapper">
                     <h4 style="margin: 0;">Campus-Wide Incident Reports</h4>
-                    <select id="dashboardStatusFilter" onchange="loadReports()" style="padding: 6px 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 13px; font-weight: 600; outline: none; background: #f8fafc;">
-                        <option value="all">Show All Active</option>
-                        <option value="Pending">Pending Only</option>
-                        <option value="In Progress">In Progress Only</option>
-                    </select>
+                    <div class="filters-group">
+                        <select id="dashboardSortDate" onchange="loadReports()">
+                            <option value="newest">Newest First</option>
+                            <option value="oldest">Oldest First</option>
+                        </select>
+                        <select id="dashboardStatusFilter" onchange="loadReports()">
+                            <option value="all">Show All Active</option>
+                            <option value="Pending">Pending Only</option>
+                            <option value="In Progress">In Progress Only</option>
+                        </select>
+                    </div>
                 </div>
                 <div id="tracker-list" style="margin-top: 20px;"></div>
             </div>
         </section>
 
         <section id="view-history" class="dashboard-view">
-            <div class="section-header-mobile" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h3 style="margin: 0;"><i class="fas fa-check-square"></i> Resolved & Completed Tasks Archive</h3>
+            <div class="history-controls-wrapper">
+                <h3 style="margin: 0;"><i class="fas fa-check-square"></i> Archive</h3>
+                <div class="filters-group">
+                    <select id="historySortDate" onchange="loadReports()">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                    </select>
+                </div>
             </div>
             <div id="history-list"></div>
         </section>
@@ -112,7 +165,6 @@
             { account_id: "TECH001", role: "Teacher", name: "PROFESSOR X" }, 
             { email: "202512905@gordoncollege.edu.ph", role: "Student", name: "AQUINO, RAFAEL" },
             { email: "202512219@gordoncollege.edu.ph", role: "Student", name: "LEDESMA, DANNIEL LAWRENCE" }
-            // ... (dinaglat ko lang dito pero maaari mong idugtong ang buong list mo)
         ];
 
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
@@ -140,10 +192,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             const user = JSON.parse(localStorage.getItem('currentUser'));
             if(user) {
-                document.getElementById('user-display-name').innerText = `Welcome, ${user.name}!`;
-                document.getElementById('user-display-role').innerText = `${user.role}`;
-                const sidebarName = document.getElementById('sidebar-user-name'); // FIXED
-                if (sidebarName) sidebarName.innerText = `${user.name}`; // FIXED
+                document.getElementById('user-display-name').innerText = `${user.name}`;
             }
             loadReports();
         });
@@ -201,19 +250,18 @@
                     return { ...r, reporterName: reporter ? reporter.name : "Unknown User", reporterRole: reporter ? reporter.role : "Student" };
                 });
 
-                enrichedReports.sort((a, b) => {
-                    const aUrgent = a.urgency && a.urgency.includes('High');
-                    const bUrgent = b.urgency && b.urgency.includes('High');
-                    if (aUrgent && !bUrgent) return -1;
-                    if (!aUrgent && bUrgent) return 1;
-                    if (a.reporterRole === 'Teacher' && b.reporterRole !== 'Teacher') return -1;
-                    if (a.reporterRole !== 'Teacher' && b.reporterRole === 'Teacher') return 1;
-                    return new Date(b.date || 0) - new Date(a.date || 0);
-                });
-
+                // Dashboard Sort & Filter
                 const dashFilter = document.getElementById('dashboardStatusFilter').value;
+                const dashSort = document.getElementById('dashboardSortDate').value;
+
                 let activeReports = enrichedReports.filter(r => r.status !== 'Resolved'); 
                 if (dashFilter !== 'all') activeReports = activeReports.filter(r => r.status === dashFilter);
+
+                activeReports.sort((a, b) => {
+                    const dateA = new Date(a.date || 0);
+                    const dateB = new Date(b.date || 0);
+                    return dashSort === 'newest' ? dateB - dateA : dateA - dateB;
+                });
 
                 if (activeReports.length === 0) {
                     container.innerHTML = `<p style="text-align:center; color:#94a3b8; padding: 20px;">No active tasks right now. Great job!</p>`;
@@ -243,11 +291,12 @@
                                 </div>
                             </div>
                             <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end; min-width: 140px;">
-                                <small style="color:#94a3b8; font-weight:bold;">${r.displayDate}</small>
+                                <small style="color:#64748b; font-weight:bold; display:flex; align-items:center; gap:5px;"><i class="fas fa-clock"></i> ${r.displayDate}</small>
+                                
                                 <select class="status-dropdown ${selectClass}" onchange="updateReportStatus(${r.id}, this.value)">
-                                    <option value="Pending" ${status === 'Pending' ? 'selected' : ''}>Pending</option>
-                                    <option value="In Progress" ${status === 'In Progress' ? 'selected' : ''}>In Progress</option>
-                                    <option value="Resolved">Mark as Resolved ✔</option>
+                                    <option value="Pending" ${status === 'Pending' ? 'selected' : ''} style="background: #fef08a; color: #854d0e;">Pending</option>
+                                    <option value="In Progress" ${status === 'In Progress' ? 'selected' : ''} style="background: #dbeafe; color: #1e40af;">In Progress</option>
+                                    <option value="Resolved" style="background: #d1fae5; color: #065f46;">Resolved</option>
                                 </select>
                             </div>
                         </div>
@@ -255,7 +304,15 @@
                     }).join('');
                 }
 
+                // History View logic
+                const historySort = document.getElementById('historySortDate').value;
                 const resolvedReports = enrichedReports.filter(r => r.status === 'Resolved');
+                
+                resolvedReports.sort((a, b) => {
+                    const dateA = new Date(a.date || 0);
+                    const dateB = new Date(b.date || 0);
+                    return historySort === 'newest' ? dateB - dateA : dateA - dateB;
+                });
 
                 if (resolvedReports.length === 0) {
                     history.innerHTML = `<p style="text-align:center; color:#94a3b8; margin-top:20px;">No resolved tasks yet.</p>`;
@@ -270,7 +327,7 @@
                             ${imageHTML}
                             <div style="flex:1; min-width: 200px;">
                                 <div style="display:flex; gap:10px; align-items:center; margin-bottom:5px;">
-                                    <span style="font-size:11px; font-weight:bold; color:var(--gc-green);">${r.displayDate || ''}</span>
+                                    <span style="font-size:11px; font-weight:bold; color:var(--gc-green);"><i class="fas fa-clock"></i> ${r.displayDate || ''}</span>
                                     <span class="badge" style="background: ${borderColor}; color: white;">${urgency}</span>
                                     ${r.reporterRole === 'Teacher' ? '<span style="background: #fee2e2; color: #991b1b; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; border: 1px solid #fca5a5;">Faculty Priority</span>' : ''}
                                 </div>

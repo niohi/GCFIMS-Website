@@ -3,28 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GC-FIMS | Teacher Dashboard</title>
-    <link rel="icon" type="image/png" href="assets/favicon-32x32.png">
+    <title>GC-FIMS | Student Dashboard</title>
+    <link rel="icon" type="image/png" href="assets/favicon-16x16.png">
     <link rel="stylesheet" href="css/dashboard_style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         .user-welcome { text-align: right; border-left: 2px solid #e2e8f0; padding-left: 20px; }
         
-        .urgency-selector { display: flex; gap: 15px; margin-top: 10px; }
+        /* Sidebar Logo Area */
+        .logo-area { display: flex; flex-direction: column; align-items: center; padding: 30px 0; text-align: center; }
+        .sidebar-logo { max-width: 80px; height: auto; margin-bottom: 10px; }
+
+        /* Header Mobile Logo Logic */
+        .header-logo-img { display: none; max-width: 45px; height: auto; object-fit: contain; }
+
+        .urgency-selector { display: flex; gap: 15px; margin-top: 10px; flex-wrap: wrap; }
         .urgency-tag { 
             padding: 10px 20px; border-radius: 12px; cursor: pointer; border: 2px solid #e2e8f0;
-            font-weight: 700; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px;
+            font-weight: 700; transition: 0.3s; display: flex; align-items: center; gap: 8px; font-size: 14px;
         }
         .urgency-tag.low:hover, .urgency-tag.low.active { border-color: #10b981; background: #ecfdf5; color: #065f46; }
         .urgency-tag.medium:hover, .urgency-tag.medium.active { border-color: #f59e0b; background: #fffbeb; color: #92400e; }
         .urgency-tag.high:hover, .urgency-tag.high.active { border-color: #ef4444; background: #fef2f2; color: #991b1b; }
 
-        .filter-controls { display: flex; gap: 10px; flex-wrap: wrap; }
-        .filter-controls select { width: auto; padding: 8px 15px; border-radius: 8px; background: white; border: 1px solid #e2e8f0; outline: none;}
-
-        .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+        /* Color Coded Status Badges */
+        .badge { padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; border: 1px solid rgba(0,0,0,0.05); }
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-inprogress { background: #dbeafe; color: #1e40af; }
+        .status-resolved { background: #d1fae5; color: #065f46; }
         
-        /* Image Modal Styles */
+        /* Urgency Badges */
+        .badge-low { background: #ecfdf5; color: #065f46; }
+        .badge-medium { background: #fffbeb; color: #92400e; }
+        .badge-high { background: #fef2f2; color: #991b1b; }
+
+        /* FIXED: History Filters Alignment exactly based on the screenshot */
+        .history-controls-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .filters-group {
+            display: flex;
+            flex-direction: row; 
+            gap: 12px; 
+            align-items: center;
+        }
+        .filters-group select {
+            padding: 8px 15px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            background-color: #ffffff;
+            font-size: 14px;
+            font-weight: 500;
+            color: #0f172a;
+            cursor: pointer;
+            min-width: 140px;
+            outline: none;
+            transition: all 0.2s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .filters-group select:hover {
+            border-color: #94a3b8;
+        }
+
         .image-modal {
             display: none; position: fixed; z-index: 9999; left: 0; top: 0;
             width: 100%; height: 100%; background-color: rgba(0,0,0,0.85);
@@ -36,36 +81,41 @@
             transition: transform 0.3s ease; cursor: zoom-in;
         }
         .image-modal-content.zoomed { transform: scale(1.5); cursor: zoom-out; }
-        .close-modal-btn {
-            position: absolute; top: 20px; right: 40px; color: white;
-            font-size: 40px; font-weight: bold; cursor: pointer; transition: 0.2s;
-        }
+        .close-modal-btn { position: absolute; top: 20px; right: 40px; color: white; font-size: 40px; cursor: pointer; transition: 0.2s; }
         .close-modal-btn:hover { color: #ef4444; }
+
+        .timestamp { font-size: 11px; color: #64748b; font-weight: 600; display: block; margin-bottom: 4px; }
+
+        @media (max-width: 768px) {
+            .header-logo-img { display: block; margin-bottom: 10px; }
+            .header-card { flex-direction: column; text-align: center; padding: 20px; }
+            .user-welcome { text-align: center; border-left: none; padding-left: 0; margin-top: 15px; border-top: 1px solid #e2e8f0; padding-top: 10px; width: 100%; }
+            .history-controls-wrapper { flex-direction: column; align-items: flex-start; }
+            .filters-group { width: 100%; flex-direction: column; }
+            .filters-group select { width: 100%; }
+        }
     </style>
 </head>
 <body>
-
-    <!-- MOBILE MENU TOGGLE BUTTON (Upper Left) -->
     <button class="mobile-menu-btn" id="mobileMenuBtn">
         <i class="fas fa-bars"></i>
     </button>
 
-    <!-- MOBILE DARK OVERLAY -->
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <aside class="sidebar" id="sidebar">
-        <!-- Inayos ang Logo Area, tinanggal ang image at dinagdag ang Name -->
         <div class="logo-area">
-            <h1>GC-FIMS</h1>
-            <span id="sidebar-user-name" style="font-size: 13px; color: var(--gc-green); font-weight: 800; opacity: 0.9;">Loading...</span>
+            <img src="assets/GCFIMSLOGO.png" alt="Logo" class="sidebar-logo">
+            <h1 style="font-size: 20px; color: #006600; font-weight: 900; margin-top: 10px; letter-spacing: 1px;">GC-FIMS</h1>
         </div>
-        
+
         <p class="nav-label">Main Menu</p>
         <ul class="nav-links">
-            <li id="nav-dashboard" class="active"><a onclick="showView('dashboard')"><i class="fas fa-chalkboard-teacher"></i> Dashboard</a></li>
+            <li id="nav-dashboard" class="active"><a onclick="showView('dashboard')"><i class="fas fa-th-large"></i> Dashboard</a></li>
             <li id="nav-submit"><a onclick="showView('submit')"><i class="fas fa-plus-circle"></i> Submit Report</a></li>
-            <li id="nav-history"><a onclick="showView('history')"><i class="fas fa-history"></i> My History</a></li>
+            <li id="nav-history"><a onclick="showView('history')"><i class="fas fa-history"></i> History</a></li>
         </ul>
+
         <p class="nav-label" style="margin-top:auto;">Account</p>
         <ul class="nav-links">
             <li class="logout-link"><a href="login.html"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
@@ -74,20 +124,20 @@
 
     <main class="main-content">
         <header class="header-card">
-            <img src="assets/Logo.png" alt="Logo" style="border-radius: 50%;">
+            <img src="assets/GCFIMSLOGO.png" alt="Logo" class="header-logo-img">
             <div style="flex: 1;">
                 <h2>Gordon College</h2>
                 <p>Facility Issue Management System (GC-FIMS)</p>
             </div>
             <div class="user-welcome">
-                <span id="user-display-name" style="font-weight: 800; color: var(--gc-green); display: block; font-size: 18px;">Welcome, Teacher!</span>
-                <small id="user-display-role" style="color: #64748b; font-weight: 600;">Faculty Priority Account</small>
+                <span id="user-display-name" style="font-weight: 800; color: #006600; display: block; font-size: 18px;">Welcome!</span>
+                <small id="user-display-role" style="color: #64748b; font-weight: 600;">Student Account</small>
             </div>
         </header>
 
         <section id="view-dashboard" class="dashboard-view active">
             <div class="view-header section-header-mobile">
-                <h3 style="margin: 0;"><i class="fas fa-chalkboard-teacher" style="color: var(--gc-green);"></i> Teacher Dashboard</h3>
+                <h3 style="margin: 0;"><i class="fas fa-th-large" style="color: #006600;"></i> Student Dashboard</h3>
             </div>
             <div class="card" id="reports-container">
                 <div class="section-header-mobile" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
@@ -105,30 +155,29 @@
 
         <section id="view-submit" class="dashboard-view">
             <div class="card">
-                <h3 style="margin-bottom: 25px;">Submit Faculty Report</h3>
+                <h3 style="margin-bottom: 25px;">Submit New Report</h3>
                 <form id="report-form" class="form-grid">
                     <div class="form-group full-width">
                         <label>Issue Title</label>
-                        <input type="text" id="issue_title" placeholder="e.g., Defective Aircon, Projector Bulb Replacement..." required>
+                        <input type="text" id="issue_title" placeholder="e.g., Broken projector mount" required>
                     </div>
                     <div class="form-group full-width">
                         <label>Description</label>
-                        <textarea id="description" rows="3" placeholder="Please provide specific details for faster maintenance action..." required></textarea>
+                        <textarea id="description" rows="3" placeholder="Explain the problem..." required></textarea>
                     </div>
                     <div class="form-group">
                         <label>Category</label>
                         <select id="category">
-                            <option value="Classroom Equipment">Classroom Equipment (Projector, PC)</option>
-                            <option value="HVAC/Electrical">HVAC & Electrical (Aircon, Lights)</option>
-                            <option value="Furniture">Furniture (Chairs, Tables)</option>
-                            <option value="Plumbing/Facility">Facility & Plumbing</option>
+                            <option value="Furniture">Furniture</option>
+                            <option value="Electrical">Electrical</option>
+                            <option value="IT">IT Resources</option>
+                            <option value="Plumbing">Plumbing</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label>Location</label>
-                        <input type="text" id="location" placeholder="e.g., Room 302, CCS Faculty Office" required>
+                        <input type="text" id="location" placeholder="e.g., Room 302" required>
                     </div>
-
                     <div class="form-group full-width">
                         <label>Urgency Level</label>
                         <div class="urgency-selector">
@@ -138,9 +187,8 @@
                         </div>
                         <input type="hidden" id="urgency_level" value="Low">
                     </div>
-
                     <div class="form-group full-width">
-                        <label>Upload Photo Evidence <span style="color: #94a3b8; font-weight: normal;">(Optional)</span></label>
+                        <label>Upload Photo Evidence</label>
                         <input type="file" id="imageInput" accept="image/*" onchange="previewImage(event)">
                         <div class="image-preview" id="previewContainer">
                             <span style="color: #94a3b8;">No image selected</span>
@@ -154,20 +202,25 @@
         </section>
 
         <section id="view-history" class="dashboard-view">
-            <!-- Inayos ang layout ng Header para hindi nakasagad sa gilid at mas maliit ang dropdowns -->
-            <div class="section-header-mobile" style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 15px;">
-                <h3 style="margin: 0;"><i class="fas fa-history"></i> My Report History</h3>
-                <div class="filter-controls">
+            <div class="history-controls-wrapper">
+                <h3 style="margin: 0;"><i class="fas fa-history"></i> Report History</h3>
+                <div class="filters-group">
                     <select id="sortDate" onchange="loadReports()">
                         <option value="newest">Newest First</option>
                         <option value="oldest">Oldest First</option>
                     </select>
                     <select id="filterCategory" onchange="loadReports()">
                         <option value="all">All Categories</option>
-                        <option value="Classroom Equipment">Classroom Equipment</option>
-                        <option value="HVAC/Electrical">HVAC & Electrical</option>
                         <option value="Furniture">Furniture</option>
-                        <option value="Plumbing/Facility">Facility & Plumbing</option>
+                        <option value="Electrical">Electrical</option>
+                        <option value="IT">IT Resources</option>
+                        <option value="Plumbing">Plumbing</option>
+                    </select>
+                    <select id="filterHistoryStatus" onchange="loadReports()">
+                        <option value="all">All Status</option>
+                        <option value="Pending">Pending</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Resolved">Resolved</option>
                     </select>
                 </div>
             </div>
@@ -175,16 +228,12 @@
         </section>
     </main>
 
-    <!-- Image Lightbox/Modal -->
     <div id="imageViewerModal" class="image-modal" onclick="closeImageViewer()">
         <span class="close-modal-btn">&times;</span>
-        <img class="image-modal-content" id="fullSizeImage" onclick="toggleZoom(event)" title="Click to zoom in/out">
+        <img class="image-modal-content" id="fullSizeImage" onclick="toggleZoom(event)">
     </div>
 
     <script>
-        // ==========================================
-        // MOBILE HAMBURGER MENU LOGIC
-        // ==========================================
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebarOverlay');
@@ -192,327 +241,165 @@
 
         function toggleMobileMenu() {
             sidebar.classList.toggle('active');
-            
             if (sidebar.classList.contains('active')) {
                 overlay.style.display = 'block';
                 setTimeout(() => overlay.style.opacity = '1', 10);
-                menuIcon.classList.remove('fa-bars');
-                menuIcon.classList.add('fa-times');
+                menuIcon.classList.remove('fa-bars'); menuIcon.classList.add('fa-times');
             } else {
                 overlay.style.opacity = '0';
                 setTimeout(() => overlay.style.display = 'none', 300);
-                menuIcon.classList.remove('fa-times');
-                menuIcon.classList.add('fa-bars');
+                menuIcon.classList.remove('fa-times'); menuIcon.classList.add('fa-bars');
             }
         }
-
         mobileMenuBtn.addEventListener('click', toggleMobileMenu);
-        overlay.addEventListener('click', toggleMobileMenu); 
+        overlay.addEventListener('click', toggleMobileMenu);
 
-        // ==========================================
-        // CORE DASHBOARD LOGIC
-        // ==========================================
         window.editingReportId = null;
 
         document.addEventListener('DOMContentLoaded', () => {
             const user = JSON.parse(localStorage.getItem('currentUser'));
             if(user) {
-                // Dinagdag: Update Sidebar Username
-                const nameElem = document.getElementById('user-display-name');
-                const sidebarName = document.getElementById('sidebar-user-name');
-                if (nameElem) nameElem.innerText = `Welcome, ${user.name}!`;
-                if (sidebarName) sidebarName.innerText = `${user.name}`;
+                document.getElementById('user-display-name').innerText = `Welcome, ${user.name}!`;
+                document.getElementById('user-display-role').innerText = `${user.role} Account`;
             }
-            
             loadReports();
 
             const reportForm = document.getElementById('report-form');
             if (reportForm) {
                 reportForm.addEventListener('submit', function(e) {
                     e.preventDefault(); 
-                    try {
-                        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-                        if (!currentUser) return;
+                    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+                    if (!currentUser) return;
+                    let reports = JSON.parse(localStorage.getItem('reports')) || [];
+                    const previewElem = document.getElementById('previewContainer');
+                    const now = new Date();
+                    const fullTimestamp = now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-                        let reports = JSON.parse(localStorage.getItem('reports')) || [];
-                        const previewElem = document.getElementById('previewContainer');
-                        
-                        if (window.editingReportId) {
-                            const index = reports.findIndex(r => r.id === window.editingReportId);
-                            if (index !== -1) {
-                                reports[index].title = document.getElementById('issue_title').value;
-                                reports[index].desc = document.getElementById('description').value;
-                                reports[index].cat = document.getElementById('category').value;
-                                reports[index].loc = document.getElementById('location').value;
-                                reports[index].urgency = document.getElementById('urgency_level').value || "Low";
-                                if (previewElem.dataset.base64) {
-                                    reports[index].img = previewElem.dataset.base64;
-                                }
-                            }
-                            alert('Faculty Report Updated Successfully!');
-                        } else {
-                            const newReport = {
-                                id: Date.now(),
-                                authorId: currentUser.email || currentUser.account_id, 
-                                title: document.getElementById('issue_title').value,
-                                desc: document.getElementById('description').value,
-                                cat: document.getElementById('category').value,
-                                loc: document.getElementById('location').value,
-                                urgency: document.getElementById('urgency_level').value || "Low",
-                                img: previewElem.dataset.base64 || '',
-                                date: new Date().toISOString(),
-                                displayDate: new Date().toLocaleDateString(),
-                                status: 'Pending' 
-                            };
-                            reports.push(newReport);
-                            alert('Faculty Report Submitted Successfully!');
+                    if (window.editingReportId) {
+                        const index = reports.findIndex(r => r.id === window.editingReportId);
+                        if (index !== -1) {
+                            reports[index].title = document.getElementById('issue_title').value;
+                            reports[index].desc = document.getElementById('description').value;
+                            reports[index].cat = document.getElementById('category').value;
+                            reports[index].loc = document.getElementById('location').value;
+                            reports[index].urgency = document.getElementById('urgency_level').value;
+                            if (previewElem.dataset.base64) reports[index].img = previewElem.dataset.base64;
                         }
-
-                        localStorage.setItem('reports', JSON.stringify(reports));
-                        
-                        this.reset();
-                        document.getElementById('urgency_level').value = "Low";
-                        document.querySelectorAll('.urgency-tag').forEach(tag => tag.classList.remove('active'));
-                        document.querySelector('.urgency-tag.low').classList.add('active');
-                        previewElem.innerHTML = '<span style="color: #94a3b8;">No image selected</span>';
-                        delete previewElem.dataset.base64;
-                        window.editingReportId = null;
-                        document.querySelector('#report-form button[type="submit"]').innerText = "Submit Report";
-                        
-                        showView('dashboard');
-                    } catch (error) {
-                        console.error("Submission error:", error);
+                        alert('Report Updated!');
+                    } else {
+                        const newReport = {
+                            id: Date.now(),
+                            authorId: currentUser.email || currentUser.account_id, 
+                            title: document.getElementById('issue_title').value,
+                            desc: document.getElementById('description').value,
+                            cat: document.getElementById('category').value,
+                            loc: document.getElementById('location').value,
+                            urgency: document.getElementById('urgency_level').value,
+                            img: previewElem.dataset.base64 || '',
+                            date: now.toISOString(),
+                            displayDate: fullTimestamp,
+                            status: 'Pending'
+                        };
+                        reports.push(newReport);
+                        alert('Report Submitted!');
                     }
+                    localStorage.setItem('reports', JSON.stringify(reports));
+                    this.reset();
+                    showView('dashboard');
                 });
             }
         });
 
-        window.deleteReport = function(id) {
-            let reports = JSON.parse(localStorage.getItem('reports')) || [];
-            const report = reports.find(r => r.id === id);
-            if (report && report.status !== 'Pending') {
-                alert("You can only delete reports that are currently 'Pending'.");
-                return;
-            }
-            if(confirm("Are you sure you want to delete this report?")) {
-                reports = reports.filter(r => r.id !== id);
-                localStorage.setItem('reports', JSON.stringify(reports));
-                loadReports();
-            }
-        };
-
-        window.editReport = function(id) {
-            let reports = JSON.parse(localStorage.getItem('reports')) || [];
-            const report = reports.find(r => r.id === id);
-            if (report && report.status !== 'Pending') {
-                alert("You can only edit reports that are currently 'Pending'.");
-                return;
-            }
-            if (report) {
-                window.editingReportId = id; 
-                document.getElementById('issue_title').value = report.title;
-                document.getElementById('description').value = report.desc;
-                document.getElementById('category').value = report.cat;
-                document.getElementById('location').value = report.loc;
-                
-                let tagClass = 'low';
-                if(report.urgency === 'Medium') tagClass = 'medium';
-                if(report.urgency.includes('High')) tagClass = 'high';
-                selectUrgency(report.urgency, document.querySelector(`.urgency-tag.${tagClass}`));
-                
-                const previewElem = document.getElementById('previewContainer');
-                if(report.img) {
-                    previewElem.innerHTML = `<img src="${report.img}" style="width:100%; height:100%; object-fit:cover;">`;
-                    previewElem.dataset.base64 = report.img;
-                } else {
-                    previewElem.innerHTML = '<span style="color: #94a3b8;">No image selected</span>';
-                    delete previewElem.dataset.base64;
-                }
-                document.querySelector('#report-form button[type="submit"]').innerText = "Update Report";
-                showView('submit');
-            }
-        };
-
-        window.showView = function(viewId) {
-            document.querySelectorAll('.dashboard-view').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
-            
-            const targetView = document.getElementById('view-' + viewId);
-            const targetNav = document.getElementById('nav-' + viewId);
-            
-            if (targetView) targetView.classList.add('active');
-            if (targetNav) targetNav.classList.add('active');
-            
-            if(viewId === 'dashboard' || viewId === 'history') loadReports();
-
-            if(window.innerWidth <= 768 && sidebar.classList.contains('active')) {
-                toggleMobileMenu();
-            }
-        };
-
-        window.selectUrgency = function(level, element) {
-            document.querySelectorAll('.urgency-tag').forEach(tag => tag.classList.remove('active'));
-            element.classList.add('active');
-            document.getElementById('urgency_level').value = level;
-        };
-
-        window.previewImage = function(event) {
-            const reader = new FileReader();
-            const preview = document.getElementById('previewContainer');
-            reader.onload = function() {
-                preview.innerHTML = `<img src="${reader.result}" style="width:100%; height:100%; object-fit:cover;">`;
-                preview.dataset.base64 = reader.result;
-            }
-            if(event.target.files[0]) reader.readAsDataURL(event.target.files[0]);
-        };
-
-        window.openImageViewer = function(imageSrc) {
-            const modal = document.getElementById('imageViewerModal');
-            const img = document.getElementById('fullSizeImage');
-            img.src = imageSrc;
-            img.classList.remove('zoomed'); 
-            modal.style.display = "flex";
-        };
-
-        window.closeImageViewer = function() {
-            document.getElementById('imageViewerModal').style.display = "none";
-        };
-
-        window.toggleZoom = function(event) {
-            event.stopPropagation(); 
-            const img = document.getElementById('fullSizeImage');
-            img.classList.toggle('zoomed');
-        };
-
         window.loadReports = function() {
-            try {
-                const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-                if (!currentUser) return;
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (!currentUser) return;
+            const rawReports = JSON.parse(localStorage.getItem('reports')) || [];
+            const myReports = rawReports.filter(r => r.authorId === (currentUser.email || currentUser.account_id));
+            
+            const trackerList = document.getElementById('tracker-list');
+            const historyList = document.getElementById('history-list');
 
-                const rawReports = JSON.parse(localStorage.getItem('reports')) || [];
-                const container = document.getElementById('tracker-list');
-                const history = document.getElementById('history-list');
+            // Dashboard Tracker
+            const dashFilter = document.getElementById('dashboardStatusFilter').value;
+            let dashData = [...myReports].sort((a,b) => b.id - a.id);
+            if(dashFilter !== 'all') dashData = dashData.filter(r => r.status === dashFilter);
+            
+            trackerList.innerHTML = dashData.length ? dashData.slice(0,5).map(r => {
+                const s = r.status || "Pending";
+                const sClass = s === "In Progress" ? "status-inprogress" : (s === "Resolved" ? "status-resolved" : "status-pending");
+                const uColor = r.urgency.includes('High') ? '#ef4444' : (r.urgency === 'Medium' ? '#f59e0b' : '#10b981');
 
-                if (!container || !history) return;
+                return `
+                <div style="margin-bottom:12px; padding:15px; background:#f8fafc; border:1px solid #e2e8f0; border-left:5px solid ${uColor}; border-radius:8px; display:flex; flex-wrap:wrap; gap:15px; align-items:center;">
+                    ${r.img ? `<img src="${r.img}" onclick="openImageViewer('${r.img}')" style="width:50px; height:50px; border-radius:6px; object-fit:cover; cursor:pointer;">` : ''}
+                    <div style="flex:1;">
+                        <span class="timestamp">${r.displayDate}</span>
+                        <strong>${r.title}</strong>
+                        <small style="display:block; color:#64748b;">${r.loc}</small>
+                    </div>
+                    <span class="badge ${sClass}">${s}</span>
+                    <div style="display:flex; gap:10px;">
+                        <button onclick="editReport(${r.id})" style="background:none; border:none; color:#3b82f6; cursor:pointer; font-size:16px;"><i class="fas fa-edit"></i></button>
+                        <button onclick="deleteReport(${r.id})" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:16px;"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>`;
+            }).join('') : '<p style="text-align:center; color:#94a3b8;">No reports found.</p>';
 
-                const currentUserId = currentUser.email || currentUser.account_id;
-                const myReports = rawReports.filter(r => r.authorId === currentUserId);
+            // History List
+            const catF = document.getElementById('filterCategory').value;
+            const statF = document.getElementById('filterHistoryStatus').value;
+            const sortF = document.getElementById('sortDate').value;
+            let histData = [...myReports];
+            if(catF !== 'all') histData = histData.filter(r => r.cat === catF);
+            if(statF !== 'all') histData = histData.filter(r => r.status === statF);
+            histData.sort((a,b) => sortF === 'newest' ? b.id - a.id : a.id - b.id);
 
-                if (myReports.length === 0) {
-                    container.innerHTML = `<p style="text-align:center; color:#94a3b8;">No reports found.</p>`;
-                    history.innerHTML = `<p style="text-align:center; color:#94a3b8; margin-top:20px;">No history records found.</p>`;
-                    return;
-                }
-
-                const dashFilterElem = document.getElementById('dashboardStatusFilter');
-                const dashFilter = dashFilterElem ? dashFilterElem.value : 'all';
-
-                let dashboardReports = [...myReports].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+            historyList.innerHTML = histData.length ? histData.map(r => {
+                const s = r.status || "Pending";
+                const sClass = s === "In Progress" ? "status-inprogress" : (s === "Resolved" ? "status-resolved" : "status-pending");
+                const uClass = r.urgency.toLowerCase().includes('high') ? 'badge-high' : (r.urgency === 'Medium' ? 'badge-medium' : 'badge-low');
                 
-                if (dashFilter !== 'all') {
-                    dashboardReports = dashboardReports.filter(r => r.status === dashFilter);
-                }
+                return `
+                <div class="card" style="margin-bottom:15px; display:flex; flex-wrap:wrap; gap:20px; align-items:center;">
+                    <div style="flex:1;">
+                        <span class="timestamp">${r.displayDate}</span>
+                        <h4 style="margin:0;">${r.title}</h4>
+                        <small>${r.loc} | ${r.cat}</small>
+                    </div>
+                    <span class="badge ${uClass}">${r.urgency}</span>
+                    <span class="badge ${sClass}">${s}</span>
+                </div>`;
+            }).join('') : '<p style="text-align:center; color:#94a3b8;">No records found.</p>';
+        };
 
-                if (dashboardReports.length === 0) {
-                    container.innerHTML = `<p style="text-align:center; color:#94a3b8;">No ${dashFilter.toLowerCase()} reports found.</p>`;
-                } else {
-                    container.innerHTML = dashboardReports.slice(0, 5).map(r => {
-                        const urgency = r.urgency || "Low"; 
-                        let borderColor = "#10b981"; 
-                        if (urgency === "Medium") borderColor = "#f59e0b"; 
-                        if (urgency.includes("High")) borderColor = "#ef4444"; 
-
-                        const status = r.status || "Pending";
-                        let statusBg = "#fef08a"; let statusColor = "#854d0e"; 
-                        if (status === "In Progress") { statusBg = "#dbeafe"; statusColor = "#1e40af"; } 
-                        if (status === "Resolved" || status === "Fixed") { statusBg = "#d1fae5"; statusColor = "#065f46"; } 
-
-                        let actionButtons = '';
-                        if (status === 'Pending') {
-                            actionButtons = `
-                                <button onclick="editReport(${r.id})" style="background:none; border:none; color:#3b82f6; cursor:pointer; font-size: 16px;" title="Edit Report"><i class="fas fa-edit"></i></button>
-                                <button onclick="deleteReport(${r.id})" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size: 16px;" title="Delete Report"><i class="fas fa-trash"></i></button>
-                            `;
-                        } else {
-                            actionButtons = `<span style="font-size: 12px; color: #94a3b8; font-style: italic;"><i class="fas fa-lock"></i> Locked</span>`;
-                        }
-
-                        let imageHTML = r.img 
-                            ? `<img src="${r.img}" onclick="openImageViewer('${r.img}')" style="width:60px; height:60px; border-radius:8px; object-fit:cover; cursor:zoom-in; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" title="Click to view full image">`
-                            : `<div style="width:60px; height:60px; border-radius:8px; background:#f1f5f9; display:flex; align-items:center; justify-content:center; color:#94a3b8;"><i class="fas fa-image"></i></div>`;
-
-                        return `
-                        <div style="margin-bottom: 12px; padding: 12px 15px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 5px solid ${borderColor}; border-radius: 8px; display:flex; gap:15px; align-items:center;">
-                            ${imageHTML}
-                            <div style="flex:1;">
-                                <strong style="display:block; color: #1e293b; margin-bottom: 2px;">${r.title || 'Untitled'}</strong>
-                                <small style="color:#64748b;">${r.loc || 'Unknown'} • ${status}</small>
-                            </div>
-                            <div style="display: flex; gap: 12px; align-items: center;">
-                                <span class="badge" style="background-color:${statusBg}; color:${statusColor}; text-transform:uppercase;">${status}</span>
-                                ${actionButtons}
-                            </div>
-                        </div>
-                        `;
-                    }).join('');
-                }
-
-                let historyReports = [...myReports];
-                const catFilterElem = document.getElementById('filterCategory');
-                const dateSortElem = document.getElementById('sortDate');
-                
-                const catFilter = catFilterElem ? catFilterElem.value : 'all';
-                const dateSort = dateSortElem ? dateSortElem.value : 'newest';
-
-                if (catFilter !== 'all') {
-                    historyReports = historyReports.filter(r => r.cat === catFilter);
-                }
-
-                historyReports.sort((a, b) => {
-                    return dateSort === 'newest' 
-                        ? new Date(b.date || 0) - new Date(a.date || 0) 
-                        : new Date(a.date || 0) - new Date(b.date || 0);
-                });
-
-                if (historyReports.length === 0) {
-                    history.innerHTML = `<p style="text-align:center; color:#94a3b8; margin-top:20px;">No history records matches your filter.</p>`;
-                } else {
-                    history.innerHTML = historyReports.map(r => {
-                        const urgency = r.urgency || "Low";
-                        const urgencyClass = urgency.toLowerCase().split('/')[0];
-                        const status = r.status || "Pending";
-                        let statusBg = "#fef08a"; let statusColor = "#854d0e"; 
-                        if (status === "In Progress") { statusBg = "#dbeafe"; statusColor = "#1e40af"; } 
-                        if (status === "Resolved" || status === "Fixed") { statusBg = "#d1fae5"; statusColor = "#065f46"; }
-
-                        let imageHTML = r.img 
-                            ? `<img src="${r.img}" onclick="openImageViewer('${r.img}')" style="width:120px; height:100px; border-radius:12px; object-fit:cover; cursor:zoom-in; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" title="Click to view full image">`
-                            : `<div style="width:120px; height:100px; border-radius:12px; background:#f1f5f9; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#94a3b8;"><i class="fas fa-camera-slash" style="font-size:24px; margin-bottom:5px;"></i><small>No Photo</small></div>`;
-
-                        return `
-                        <div class="card" style="margin-bottom:15px; display:flex; gap:20px; align-items:center;">
-                            ${imageHTML}
-                            <div style="flex:1;">
-                                <div style="display:flex; gap:10px; align-items:center; margin-bottom:5px;">
-                                    <span style="font-size:11px; font-weight:bold; color:var(--gc-green);">${r.displayDate || ''}</span>
-                                    <span class="badge badge-${urgencyClass}">${urgency}</span>
-                                    <span style="background: #fee2e2; color: #991b1b; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; border: 1px solid #fca5a5;">Faculty Priority</span>
-                                </div>
-                                <h4 style="margin:0 0 5px 0;">${r.title || 'Untitled'}</h4>
-                                <p style="font-size:13px; color:#64748b;">${r.desc || ''}</p>
-                                <small style="color:#94a3b8;">Location: ${r.loc || ''} | Category: ${r.cat || ''}</small>
-                            </div>
-                            <div style="text-align:right;">
-                                <span style="background:${statusBg}; padding:5px 12px; border-radius:20px; font-size:12px; font-weight:bold; color:${statusColor}; text-transform:uppercase;">${status}</span>
-                            </div>
-                        </div>
-                        `;
-                    }).join('');
-                }
-            } catch (e) {
-                console.error("Error loading reports to UI:", e);
+        window.deleteReport = (id) => { if(confirm("Delete this report?")) { let rs = JSON.parse(localStorage.getItem('reports')).filter(r => r.id !== id); localStorage.setItem('reports', JSON.stringify(rs)); loadReports(); } };
+        window.editReport = (id) => {
+            const r = JSON.parse(localStorage.getItem('reports')).find(x => x.id === id);
+            if(r) {
+                window.editingReportId = id;
+                document.getElementById('issue_title').value = r.title;
+                document.getElementById('description').value = r.desc;
+                document.getElementById('category').value = r.cat;
+                document.getElementById('location').value = r.loc;
+                const tag = r.urgency === 'Medium' ? 'medium' : (r.urgency.includes('High') ? 'high' : 'low');
+                selectUrgency(r.urgency, document.querySelector(`.urgency-tag.${tag}`));
+                showView('submit');
+                document.querySelector('#report-form button').innerText = "Update Report";
             }
         };
+        window.showView = (v) => {
+            document.querySelectorAll('.dashboard-view').forEach(x => x.classList.remove('active'));
+            document.querySelectorAll('.sidebar li').forEach(x => x.classList.remove('active'));
+            document.getElementById('view-'+v).classList.add('active');
+            document.getElementById('nav-'+v).classList.add('active');
+            if(v !== 'submit') { loadReports(); document.querySelector('#report-form button').innerText = "Submit Report"; window.editingReportId = null; }
+            if(window.innerWidth <= 768) toggleMobileMenu();
+        };
+        window.selectUrgency = (l, e) => { document.querySelectorAll('.urgency-tag').forEach(x => x.classList.remove('active')); e.classList.add('active'); document.getElementById('urgency_level').value = l; };
+        window.previewImage = (e) => { const reader = new FileReader(); reader.onload = () => { document.getElementById('previewContainer').innerHTML = `<img src="${reader.result}" style="width:100%; height:100%; object-fit:cover;">`; document.getElementById('previewContainer').dataset.base64 = reader.result; }; if(e.target.files[0]) reader.readAsDataURL(e.target.files[0]); };
+        window.openImageViewer = (src) => { document.getElementById('fullSizeImage').src = src; document.getElementById('imageViewerModal').style.display = "flex"; };
+        window.closeImageViewer = () => { document.getElementById('imageViewerModal').style.display = "none"; };
+        window.toggleZoom = (e) => { e.stopPropagation(); document.getElementById('fullSizeImage').classList.toggle('zoomed'); };
     </script>
 </body>
 </html>

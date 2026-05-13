@@ -4,24 +4,26 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>GC-FIMS - Login</title>
-    <link rel="icon" type="image/png" href="assets/favicon-32x32.png">
+    <link rel="icon" type="image/png" href="assets/favicon-16x16.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
 <main class="layout">
-    <header class="header">
-        <img src="assets/Logo.png" class="header__logo" alt="GC Logo">
-        <div class="header__text">
-            <h1 class="header__title">GC-FIMS</h1>
-            <p class="header__subtitle">Facility Issue Management System</p>
-        </div>
-    </header>
-
     <div class="layout__content">
         <section class="auth-info">
             <div class="auth-info__card">
+                <div class="auth-info__badge-container">
+                    <img src="assets/GORDONCOLLEGE LOGO.png" class="badge-logo logo-1" alt="GC Logo">
+                    <img src="assets/GCFIMSLOGO.png" class="badge-logo logo-2" alt="GC-FIMS Logo">
+                </div>
+
+                <div class="branding-header-text">
+                    <h1>GC-FIMS</h1>
+                    <p>Facility Issue Management System</p>
+                </div>
+                
                 <h2 class="auth-info__heading">Improving Gordon College, One Report at a Time</h2>
                 <p class="auth-info__description">
                     Easily report facility issues like broken chairs or faulty utilities. 
@@ -40,7 +42,7 @@
                         <label class="form__label">Email or ID Number</label>
                         <div class="form__input-wrapper">
                             <i class="fa-solid fa-user form__icon"></i>
-                            <input name="email" class="form__input" type="text" placeholder="ID (e.g., 2021-XXXX) or Email" required autocomplete="username">
+                            <input name="email" class="form__input" type="text" placeholder="Enter your Email/ID" required autocomplete="username">
                         </div>
                     </div>
 
@@ -48,13 +50,20 @@
                         <label class="form__label">Password</label>
                         <div class="form__input-wrapper">
                             <i class="fa-solid fa-lock form__icon"></i>
-                            <input name="password" class="form__input" type="password" placeholder="Enter your password" required autocomplete="current-password">
+                            <input name="password" id="password" class="form__input" type="password" placeholder="Enter your password" required autocomplete="current-password">
+                            <i class="fa-solid fa-eye-slash" id="togglePassword"></i>
                         </div>
                     </div>
 
                     <button type="submit" class="button--primary">Login</button>
 
-                    <div class="auth-card__footer">
+                    <div style="text-align: center; margin-top: 15px; font-size: 12px; color: var(--text-gray);">
+                        By logging in, you agree to our 
+                        <a href="#" onclick="openTermsModal()" style="color: var(--primary-orange); text-decoration: none; font-weight: bold;">Terms & Conditions</a> 
+                        and Privacy Policy.
+                    </div>
+
+                    <div class="auth-card__footer" style="margin-top: 20px;">
                         <a href="forgot-password.html" class="auth-card__link">Forgot password?</a>
                     </div>
                 </form>
@@ -63,6 +72,26 @@
     </div>
 </main>
 
+<div id="termsModalOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(3px);">
+    <div style="background: #fff; width: 90%; max-width: 480px; padding: 25px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3 style="color: var(--dark-green); font-size: 18px; font-weight: 800;"><i class="fa-solid fa-file-contract"></i> Terms and Policies</h3>
+            <i class="fa-solid fa-times" style="cursor: pointer; font-size: 20px; color: #94a3b8;" onclick="closeTermsModal()"></i>
+        </div>
+        <div style="font-size: 12.5px; color: #475569; line-height: 1.5; text-align: justify; display: flex; flex-direction: column; gap: 10px;">
+            <p><strong>1. Acceptance:</strong> By accessing GC-FIMS, you agree to these terms.</p>
+            <p><strong>2. Proper Use:</strong> Use the system only for genuine facility issues. False reports may lead to disciplinary action.</p>
+            <p><strong>3. Privacy:</strong> Your data is handled in compliance with the Data Privacy Act of 2012.</p>
+            <p><strong>4. Security:</strong> You are responsible for all activities under your account.</p>
+        </div>
+        <button class="button--primary" style="margin-top: 20px; padding: 12px; font-size: 14px;" onclick="closeTermsModal()">I Understand & Agree</button>
+    </div>
+</div>
+
 <script src="script/script.js"></script>
+<script>
+    function openTermsModal() { document.getElementById('termsModalOverlay').style.display = 'flex'; }
+    function closeTermsModal() { document.getElementById('termsModalOverlay').style.display = 'none'; }
+</script>
 </body>
-</html> 
+</html>

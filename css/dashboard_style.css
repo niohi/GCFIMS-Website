@@ -46,12 +46,13 @@ body {
     transition: transform 0.3s ease;
 }
 
+/* FIXED: Binawasan ang margin-bottom para umangat ang menu */
 .logo-area {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     gap: 5px;
-    margin-bottom: 40px;
+    margin-bottom: 15px; 
     padding-left: 10px;
 }
 
@@ -63,7 +64,6 @@ body {
     line-height: 1;
 }
 
-/* FIX: Para hindi lumagpas kapag sobrang haba ng pangalan ng User */
 #sidebar-user-name {
     word-wrap: break-word;
     white-space: normal;
@@ -72,12 +72,13 @@ body {
     display: inline-block;
 }
 
+/* FIXED: Binawasan ang top margin para mas malapit sa logo */
 .nav-label {
     font-size: 11px;
     text-transform: uppercase;
     color: #94a3b8;
     font-weight: 700;
-    margin: 25px 0 10px 10px;
+    margin: 10px 0 8px 10px; 
 }
 
 .nav-links {
@@ -166,7 +167,7 @@ body {
 }
 
 /* =========================================
-   UNIVERSAL HEADER CARD
+   UNIVERSAL HEADER CARD & LOGO LOGIC
    ========================================= */
 .main-content {
     margin-left: 280px;
@@ -201,6 +202,24 @@ body {
 .header-card p {
     font-size: 13px;
     color: var(--text-muted);
+}
+
+.header-card .header__logos {
+    display: none; 
+    gap: 15px;
+    align-items: center;
+}
+
+.header__logo-img { 
+    width: 65px !important; 
+    height: 65px; 
+    margin-right: 0 !important; 
+    border-radius: 50%; 
+    object-fit: contain; 
+    border: 2px solid white; 
+    background-color: white; 
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    padding: 4px;
 }
 
 /* =========================================
@@ -315,101 +334,26 @@ input:focus, textarea:focus, select:focus {
    MEDIA QUERIES FOR RESPONSIVENESS
    ========================================= */
 @media (max-width: 768px) {
-    .mobile-menu-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .sidebar {
-        transform: translateX(-100%);
-        box-shadow: 4px 0 15px rgba(0,0,0,0.1);
-        padding-top: 80px; /* FIX: Itinulak pababa ang laman ng sidebar para hindi matakpan ng X button */
-    }
-
-    .sidebar.active {
-        transform: translateX(0);
-    }
-
-    .main-content {
-        margin-left: 0;
-        padding: 85px 20px 20px 20px; 
-    }
-
-    .header-card {
-        flex-direction: column;
-        text-align: center;
-        gap: 15px;
-        padding: 20px;
-    }
-
-    .header-card img {
-        margin-right: 0;
-    }
-
-    .user-welcome {
-        border-left: none !important;
-        border-top: 1px solid var(--border-color);
-        padding-left: 0 !important;
-        padding-top: 15px;
-        text-align: center !important;
-        width: 100%;
-    }
-
-    .form-grid {
-        grid-template-columns: 1fr;
-    }
-    .full-width {
-        grid-column: span 1;
-    }
-
-    .urgency-selector {
-        flex-direction: column;
-        gap: 10px;
-    }
-    .urgency-tag {
-        justify-content: center;
-    }
-
-    #reports-container > div {
-        flex-direction: column;
-        align-items: flex-start !important;
-        gap: 10px;
-    }
-    #dashboardStatusFilter {
-        width: 100%;
-    }
-
-    .section-header-mobile {
-        flex-direction: column;
-        align-items: flex-start !important;
-        gap: 15px;
-        padding: 0 10px; 
-    }
-
-    .filter-controls {
-        flex-direction: row; 
-        flex-wrap: wrap; 
-        width: 100%;
-        gap: 10px;
-    }
+    .mobile-menu-btn { display: flex; align-items: center; justify-content: center; }
+    .sidebar { transform: translateX(-100%); box-shadow: 4px 0 15px rgba(0,0,0,0.1); padding-top: 80px; }
+    .sidebar.active { transform: translateX(0); }
+    .main-content { margin-left: 0; padding: 85px 20px 20px 20px; }
     
-    .filter-controls select {
-        width: auto; 
-        flex: 1; 
-        min-width: 130px; 
-    }
-
-    .card[style*="display:flex"] {
-        flex-direction: column;
-        align-items: flex-start !important;
-    }
-    .card[style*="display:flex"] img {
-        width: 100% !important;
-        height: 150px !important;
-    }
-    .card[style*="display:flex"] > div {
-        text-align: left !important;
-        width: 100%;
-    }
+    .header-card { flex-direction: column; text-align: center; gap: 15px; padding: 20px; }
+    .header-card .header__logos { display: flex; justify-content: center; width: 100%; margin-bottom: 5px; }
+    .header-card img { margin-right: 0; }
+    
+    .user-welcome { border-left: none !important; border-top: 1px solid var(--border-color); padding-left: 0 !important; padding-top: 15px; text-align: center !important; width: 100%; }
+    .form-grid { grid-template-columns: 1fr; }
+    .full-width { grid-column: span 1; }
+    .urgency-selector { flex-direction: column; gap: 10px; }
+    .urgency-tag { justify-content: center; }
+    #reports-container > div { flex-direction: column; align-items: flex-start !important; gap: 10px; }
+    #dashboardStatusFilter { width: 100%; }
+    .section-header-mobile { flex-direction: column; align-items: flex-start !important; gap: 15px; padding: 0 10px; }
+    .filter-controls { flex-direction: row; flex-wrap: wrap; width: 100%; gap: 10px; }
+    .filter-controls select { width: auto; flex: 1; min-width: 130px; }
+    .card[style*="display:flex"] { flex-direction: column; align-items: flex-start !important; }
+    .card[style*="display:flex"] img { width: 100% !important; height: 150px !important; }
+    .card[style*="display:flex"] > div { text-align: left !important; width: 100%; }
 }
